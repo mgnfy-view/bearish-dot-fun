@@ -10,8 +10,10 @@ pub struct Round {
     pub ending_price: u64,
     pub long_positions: u64,
     pub short_positions: u64,
+    pub collected_amount: u64,
 
     pub bump: u8,
+    pub round_vault_bump: u8,
 }
 
 impl Round {

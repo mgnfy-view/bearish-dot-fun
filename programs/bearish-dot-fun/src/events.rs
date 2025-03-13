@@ -66,3 +66,11 @@ pub struct RoundEnded {
     pub round: u64,
     pub ending_price: u64,
 }
+
+#[event]
+pub struct BetPlaced {
+    pub user: Pubkey,
+    pub round: u64,
+    pub amount: u64,
+    pub is_long: bool,
+}

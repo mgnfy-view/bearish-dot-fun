@@ -14,6 +14,12 @@ pub mod seeds {
 
     #[constant]
     pub const ROUND: &[u8] = b"round";
+
+    #[constant]
+    pub const ROUND_VAULT: &[u8] = b"round_vault";
+
+    #[constant]
+    pub const USER_BET: &[u8] = b"user_bet";
 }
 
 pub mod general {

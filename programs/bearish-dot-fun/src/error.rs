@@ -12,4 +12,6 @@ pub enum ErrorCodes {
     InvalidAllocation,
     #[msg("Invalid affiliate address.")]
     InvalidAffiliate,
+    #[msg("Round already started.")]
+    RoundAlreadyStarted,
 }
