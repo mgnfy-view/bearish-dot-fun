@@ -3,6 +3,7 @@ pub mod error;
 pub mod events;
 pub mod instructions;
 pub mod state;
+pub mod utils;
 
 use anchor_lang::prelude::*;
 #[cfg(not(feature = "no-entrypoint"))]
@@ -12,8 +13,8 @@ pub use constants::*;
 pub use events::*;
 pub use instructions::*;
 pub use state::*;
+pub use utils::*;
 
-// Note: Add Solana security text
 #[cfg(not(feature = "no-entrypoint"))]
 security_txt! {
     name: "bearish-dot-fun",
@@ -35,11 +36,15 @@ pub mod bearish_dot_fun {
         Initialize::initialize(ctx, allocation)
     }
 
-    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
-        Deposit::deposit(ctx, amount)
+    pub fn deposit(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
+        DepositAndWithdraw::deposit(ctx, amount)
     }
 
     pub fn set_affiliate(ctx: Context<SetAffiliate>) -> Result<()> {
         SetAffiliate::set_affiliate(ctx)
+    }
+
+    pub fn withdraw(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
+        DepositAndWithdraw::withdraw(ctx, amount)
     }
 }

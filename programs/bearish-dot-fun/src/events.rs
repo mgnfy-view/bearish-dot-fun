@@ -22,3 +22,10 @@ pub struct AffiliateSet {
     pub user: Pubkey,
     pub affiliate: Pubkey,
 }
+
+#[event]
+pub struct Withdrawn {
+    pub user: Pubkey,
+    pub stablecoin: Pubkey,
+    pub amount: u64,
+}

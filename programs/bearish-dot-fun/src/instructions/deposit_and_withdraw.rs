@@ -7,7 +7,7 @@ use anchor_spl::{
 use crate::{constants, events, PlatformConfig, UserDeposit};
 
 #[derive(Accounts)]
-pub struct Deposit<'info> {
+pub struct DepositAndWithdraw<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
@@ -50,8 +50,8 @@ pub struct Deposit<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 }
 
-impl Deposit<'_> {
-    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+impl DepositAndWithdraw<'_> {
+    pub fn deposit(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
         let user = &ctx.accounts.user;
         let stablecoin = &ctx.accounts.stablecoin;
         let user_deposit = &mut ctx.accounts.user_deposit;
@@ -78,6 +78,40 @@ impl Deposit<'_> {
 
         emit!(events::Deposited {
             user: user.key(),
+            stablecoin: stablecoin.key(),
+            amount: amount
+        });
+
+        Ok(())
+    }
+
+    pub fn withdraw(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
+        let platform_config = &ctx.accounts.platform_config;
+        let stablecoin = &ctx.accounts.stablecoin;
+        let user_deposit = &mut ctx.accounts.user_deposit;
+
+        user_deposit.amount -= amount;
+
+        let platform_vault_bump = &[platform_config.platform_vault_bump];
+        let platform_vault_signer = &[&[constants::seeds::PLATFORM_VAULT, platform_vault_bump][..]];
+
+        transfer_checked(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                TransferChecked {
+                    from: ctx.accounts.platform_vault.to_account_info(),
+                    mint: stablecoin.to_account_info(),
+                    to: ctx.accounts.user_token_account.to_account_info(),
+                    authority: ctx.accounts.platform_vault.to_account_info(),
+                },
+                platform_vault_signer,
+            ),
+            amount,
+            stablecoin.decimals,
+        )?;
+
+        emit!(events::Withdrawn {
+            user: ctx.accounts.user.key(),
             stablecoin: stablecoin.key(),
             amount: amount
         });
