@@ -12,7 +12,24 @@ pub struct Initialized {
 }
 
 #[event]
+pub struct AllocationSet {
+    pub allocation: Allocation,
+}
+
+#[event]
+pub struct MinBetAmountSet {
+    pub min_bet_amount: u64,
+}
+
+#[event]
 pub struct Deposited {
+    pub user: Pubkey,
+    pub stablecoin: Pubkey,
+    pub amount: u64,
+}
+
+#[event]
+pub struct Withdrawn {
     pub user: Pubkey,
     pub stablecoin: Pubkey,
     pub amount: u64,
@@ -22,11 +39,4 @@ pub struct Deposited {
 pub struct AffiliateSet {
     pub user: Pubkey,
     pub affiliate: Pubkey,
-}
-
-#[event]
-pub struct Withdrawn {
-    pub user: Pubkey,
-    pub stablecoin: Pubkey,
-    pub amount: u64,
 }

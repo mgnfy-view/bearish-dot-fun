@@ -58,7 +58,9 @@ impl DepositAndWithdraw<'_> {
 
         user_deposit.amount += amount;
 
-        user_deposit.bump = ctx.bumps.user_deposit;
+        if user_deposit.bump == 0 {
+            user_deposit.bump = ctx.bumps.user_deposit;
+        }
 
         transfer_checked(
             CpiContext::new(

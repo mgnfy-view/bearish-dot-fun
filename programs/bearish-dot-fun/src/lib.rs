@@ -40,15 +40,23 @@ pub mod bearish_dot_fun {
         Initialize::initialize(ctx, allocation, min_bet_amount)
     }
 
+    pub fn set_min_bet_amount(ctx: Context<SetPlatformConfig>, min_bet_amount: u64) -> Result<()> {
+        SetPlatformConfig::set_min_bet_amount(ctx, min_bet_amount)
+    }
+
+    pub fn set_allocation(ctx: Context<SetPlatformConfig>, allocation: Allocation) -> Result<()> {
+        SetPlatformConfig::set_allocation(ctx, allocation)
+    }
+
     pub fn deposit(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
         DepositAndWithdraw::deposit(ctx, amount)
     }
 
-    pub fn set_affiliate(ctx: Context<SetAffiliate>) -> Result<()> {
-        SetAffiliate::set_affiliate(ctx)
-    }
-
     pub fn withdraw(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
         DepositAndWithdraw::withdraw(ctx, amount)
+    }
+
+    pub fn set_affiliate(ctx: Context<SetAffiliate>) -> Result<()> {
+        SetAffiliate::set_affiliate(ctx)
     }
 }
