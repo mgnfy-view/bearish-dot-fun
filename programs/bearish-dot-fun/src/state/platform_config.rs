@@ -16,6 +16,7 @@ pub struct PlatformConfig {
     pub owner: Pubkey,
     pub stablecoin: Pubkey,
     pub allocation: Allocation,
+    pub min_bet_amount: u64,
     pub accumulated_platform_fees: u64,
 
     pub bump: u8,

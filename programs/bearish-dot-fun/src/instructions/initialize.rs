@@ -35,7 +35,11 @@ pub struct Initialize<'info> {
 }
 
 impl Initialize<'_> {
-    pub fn initialize(ctx: Context<Initialize>, allocation: Allocation) -> Result<()> {
+    pub fn initialize(
+        ctx: Context<Initialize>,
+        allocation: Allocation,
+        min_bet_amount: u64,
+    ) -> Result<()> {
         let platform_config = &mut ctx.accounts.platform_config;
 
         let owner_pubkey = ctx.accounts.owner.key();
@@ -44,6 +48,7 @@ impl Initialize<'_> {
         platform_config.owner = owner_pubkey;
         platform_config.stablecoin = stablecoin_pubkey;
         platform_config.allocation = allocation.clone();
+        platform_config.min_bet_amount = min_bet_amount;
 
         platform_config.bump = ctx.bumps.platform_config;
         platform_config.platform_vault_bump = ctx.bumps.platform_vault;
@@ -55,6 +60,7 @@ impl Initialize<'_> {
             stablecoin: stablecoin_pubkey,
             platform_vault: ctx.accounts.platform_vault.key(),
             allocation: allocation,
+            min_bet_amount: min_bet_amount
         });
 
         Ok(())

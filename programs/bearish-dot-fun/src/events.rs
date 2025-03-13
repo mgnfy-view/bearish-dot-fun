@@ -8,6 +8,7 @@ pub struct Initialized {
     pub stablecoin: Pubkey,
     pub platform_vault: Pubkey,
     pub allocation: Allocation,
+    pub min_bet_amount: u64,
 }
 
 #[event]

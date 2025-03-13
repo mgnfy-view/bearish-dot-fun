@@ -32,8 +32,12 @@ declare_id!("8oPebxyRHN3oUiDRypZuVcS3FYfsGYJtmCEBG2NaKVUD");
 pub mod bearish_dot_fun {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, allocation: Allocation) -> Result<()> {
-        Initialize::initialize(ctx, allocation)
+    pub fn initialize(
+        ctx: Context<Initialize>,
+        allocation: Allocation,
+        min_bet_amount: u64,
+    ) -> Result<()> {
+        Initialize::initialize(ctx, allocation, min_bet_amount)
     }
 
     pub fn deposit(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
