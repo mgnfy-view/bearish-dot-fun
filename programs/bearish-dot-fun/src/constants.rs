@@ -11,6 +11,9 @@ pub mod seeds {
 
     #[constant]
     pub const USER: &[u8] = b"user";
+
+    #[constant]
+    pub const ROUND: &[u8] = b"round";
 }
 
 pub mod general {

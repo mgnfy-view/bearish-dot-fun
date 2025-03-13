@@ -32,20 +32,31 @@ declare_id!("8oPebxyRHN3oUiDRypZuVcS3FYfsGYJtmCEBG2NaKVUD");
 pub mod bearish_dot_fun {
     use super::*;
 
-    pub fn initialize(
-        ctx: Context<Initialize>,
-        allocation: Allocation,
-        min_bet_amount: u64,
-    ) -> Result<()> {
-        Initialize::initialize(ctx, allocation, min_bet_amount)
+    pub fn initialize(ctx: Context<Initialize>, global_round_info: GlobalRoundInfo) -> Result<()> {
+        Initialize::initialize(ctx, global_round_info)
+    }
+
+    pub fn set_duration(ctx: Context<SetPlatformConfig>, duration: u64) -> Result<()> {
+        SetPlatformConfig::set_duration(ctx, duration)
+    }
+
+    pub fn set_allocation(ctx: Context<SetPlatformConfig>, allocation: Allocation) -> Result<()> {
+        SetPlatformConfig::set_allocation(ctx, allocation)
     }
 
     pub fn set_min_bet_amount(ctx: Context<SetPlatformConfig>, min_bet_amount: u64) -> Result<()> {
         SetPlatformConfig::set_min_bet_amount(ctx, min_bet_amount)
     }
 
-    pub fn set_allocation(ctx: Context<SetPlatformConfig>, allocation: Allocation) -> Result<()> {
-        SetPlatformConfig::set_allocation(ctx, allocation)
+    pub fn set_price_account(ctx: Context<SetPlatformConfig>, price_account: Pubkey) -> Result<()> {
+        SetPlatformConfig::set_price_account(ctx, price_account)
+    }
+
+    pub fn set_staleness_threshold(
+        ctx: Context<SetPlatformConfig>,
+        staleness_threshold: u64,
+    ) -> Result<()> {
+        SetPlatformConfig::set_staleness_threshold(ctx, staleness_threshold)
     }
 
     pub fn deposit(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {

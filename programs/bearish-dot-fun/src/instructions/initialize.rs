@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 
-use crate::{constants, events, Allocation, PlatformConfig};
+use crate::{constants, events, GlobalRoundInfo, PlatformConfig};
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -35,11 +35,7 @@ pub struct Initialize<'info> {
 }
 
 impl Initialize<'_> {
-    pub fn initialize(
-        ctx: Context<Initialize>,
-        allocation: Allocation,
-        min_bet_amount: u64,
-    ) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, global_round_info: GlobalRoundInfo) -> Result<()> {
         let platform_config = &mut ctx.accounts.platform_config;
 
         let owner_pubkey = ctx.accounts.owner.key();
@@ -47,20 +43,22 @@ impl Initialize<'_> {
 
         platform_config.owner = owner_pubkey;
         platform_config.stablecoin = stablecoin_pubkey;
-        platform_config.allocation = allocation.clone();
-        platform_config.min_bet_amount = min_bet_amount;
+        platform_config.global_round_info = global_round_info.clone();
+
+        platform_config.global_round_info.round = 0;
 
         platform_config.bump = ctx.bumps.platform_config;
         platform_config.platform_vault_bump = ctx.bumps.platform_vault;
 
+        platform_config.validate_duration()?;
         platform_config.validate_allocation()?;
+        platform_config.validate_price_account()?;
 
         emit!(events::Initialized {
             owner: owner_pubkey,
             stablecoin: stablecoin_pubkey,
             platform_vault: ctx.accounts.platform_vault.key(),
-            allocation: allocation,
-            min_bet_amount: min_bet_amount
+            global_round_info: global_round_info,
         });
 
         Ok(())
