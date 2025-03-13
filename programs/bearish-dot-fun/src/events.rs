@@ -9,3 +9,10 @@ pub struct Initialized {
     pub platform_vault: Pubkey,
     pub allocation: Allocation,
 }
+
+#[event]
+pub struct Deposited {
+    pub user: Pubkey,
+    pub stablecoin: Pubkey,
+    pub amount: u64,
+}

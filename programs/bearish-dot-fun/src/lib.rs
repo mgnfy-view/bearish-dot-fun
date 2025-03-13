@@ -34,4 +34,8 @@ pub mod bearish_dot_fun {
     pub fn initialize(ctx: Context<Initialize>, allocation: Allocation) -> Result<()> {
         Initialize::initialize(ctx, allocation)
     }
+
+    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+        Deposit::deposit(ctx, amount)
+    }
 }
