@@ -39,7 +39,7 @@ pub struct Deposit<'info> {
         payer = user,
         space = constants::general::ANCHOR_DISCRIMINATOR_SIZE + UserDeposit::INIT_SPACE,
         seeds = [
-            constants::seeds::USER_VAULT,
+            constants::seeds::USER,
             user.key().as_ref()
         ],
         bump,

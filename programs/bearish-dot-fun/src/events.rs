@@ -16,3 +16,9 @@ pub struct Deposited {
     pub stablecoin: Pubkey,
     pub amount: u64,
 }
+
+#[event]
+pub struct AffiliateSet {
+    pub user: Pubkey,
+    pub affiliate: Pubkey,
+}

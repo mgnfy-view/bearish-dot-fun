@@ -18,9 +18,9 @@ impl UserDeposit {
         Ok(())
     }
 
-    pub fn validate_affiliate(&self, user: Pubkey) -> Result<()> {
+    pub fn validate_affiliate(&self, user: &Pubkey) -> Result<()> {
         require!(
-            self.affiliate == Pubkey::default() || self.affiliate != user,
+            self.affiliate == Pubkey::default() || self.affiliate != *user,
             error::ErrorCodes::InvalidAffiliate
         );
 

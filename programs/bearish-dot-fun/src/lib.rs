@@ -38,4 +38,8 @@ pub mod bearish_dot_fun {
     pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         Deposit::deposit(ctx, amount)
     }
+
+    pub fn set_affiliate(ctx: Context<SetAffiliate>) -> Result<()> {
+        SetAffiliate::set_affiliate(ctx)
+    }
 }

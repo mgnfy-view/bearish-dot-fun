@@ -10,7 +10,7 @@ pub mod seeds {
     pub const ALLOCATION: &[u8] = b"allocation";
 
     #[constant]
-    pub const USER_VAULT: &[u8] = b"user_vault";
+    pub const USER: &[u8] = b"user";
 }
 
 pub mod general {
