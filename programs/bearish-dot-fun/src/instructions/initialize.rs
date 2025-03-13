@@ -39,8 +39,10 @@ impl Initialize<'_> {
         let platform_config = &mut ctx.accounts.platform_config;
 
         let owner_pubkey = ctx.accounts.owner.key();
+        let stablecoin_pubkey = ctx.accounts.stablecoin.key();
 
         platform_config.owner = owner_pubkey;
+        platform_config.stablecoin = stablecoin_pubkey;
         platform_config.allocation = allocation.clone();
 
         platform_config.bump = ctx.bumps.platform_config;
@@ -50,6 +52,7 @@ impl Initialize<'_> {
 
         emit!(events::Initialized {
             owner: owner_pubkey,
+            stablecoin: stablecoin_pubkey,
             platform_vault: ctx.accounts.platform_vault.key(),
             allocation: allocation,
         });

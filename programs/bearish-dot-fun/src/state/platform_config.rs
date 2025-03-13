@@ -14,6 +14,7 @@ pub struct Allocation {
 #[derive(InitSpace)]
 pub struct PlatformConfig {
     pub owner: Pubkey,
+    pub stablecoin: Pubkey,
     pub allocation: Allocation,
 
     pub bump: u8,
