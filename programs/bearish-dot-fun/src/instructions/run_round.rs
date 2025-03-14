@@ -5,11 +5,8 @@ use crate::{constants, error, events, utils, PlatformConfig, Round};
 
 #[derive(Accounts)]
 pub struct RunRound<'info> {
-    #[account(
-        mut,
-        address = platform_config.owner,
-    )]
-    pub owner: Signer<'info>,
+    #[account(mut)]
+    pub user: Signer<'info>,
 
     #[account(
         seeds = [constants::seeds::PLATFORM_CONFIG],
@@ -22,7 +19,7 @@ pub struct RunRound<'info> {
 
     #[account(
         init_if_needed,
-        payer = owner,
+        payer = user,
         space = constants::general::ANCHOR_DISCRIMINATOR_SIZE + Round::INIT_SPACE,
         seeds = [
             constants::seeds::ROUND,
@@ -34,7 +31,7 @@ pub struct RunRound<'info> {
 
     #[account(
         init_if_needed,
-        payer = owner,
+        payer = user,
         seeds = [
             constants::seeds::ROUND_VAULT,
             &(platform_config.global_round_info.round + 1).to_be_bytes()
