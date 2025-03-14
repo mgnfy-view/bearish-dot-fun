@@ -87,14 +87,15 @@ impl PlaceBet<'_> {
         let user_bet = &mut ctx.accounts.user_bet;
 
         user_deposit.amount -= amount;
-        round.collected_amount += amount;
         user_bet.amount += amount;
 
         if is_long {
             round.long_positions += 1;
+            round.total_bet_amount_long += amount;
             user_bet.is_long = true;
         } else {
             round.short_positions += 1;
+            round.total_bet_amount_short += amount;
         }
 
         let platform_vault_bump = &[platform_config.platform_vault_bump];
