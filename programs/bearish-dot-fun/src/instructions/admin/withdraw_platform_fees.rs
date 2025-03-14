@@ -4,15 +4,23 @@ use anchor_spl::{
     token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface},
 };
 
-use crate::{constants, error, events, Bet, PlatformConfig, Round};
+use crate::{constants, error, events, PlatformConfig, Round};
 
 #[derive(Accounts)]
 #[instruction(round_index: u64)]
-pub struct ClaimUserWinnings<'info> {
-    #[account(mut)]
-    pub user: Signer<'info>,
+pub struct WithdrawAccumulatedFees<'info> {
+    #[account(address = platform_config.owner)]
+    pub owner: Signer<'info>,
 
     #[account(
+        mut,
+        token::mint = stablecoin,
+        token::authority = owner,
+    )]
+    pub owner_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        mut,
         seeds = [constants::seeds::ALLOCATION],
         bump = platform_config.bump,
     )]
@@ -42,85 +50,49 @@ pub struct ClaimUserWinnings<'info> {
     )]
     pub round_vault: InterfaceAccount<'info, TokenAccount>,
 
-    #[account(
-        mut,
-        seeds = [
-            constants::seeds::USER_BET,
-            user.key().as_ref()
-        ],
-        bump = user_bet.bump,
-    )]
-    pub user_bet: Account<'info, Bet>,
-
-    #[account(
-        mut,
-        token::mint = stablecoin,
-        token::authority = user,
-    )]
-    pub user_token_account: InterfaceAccount<'info, TokenAccount>,
-
-    pub system_program: Program<'info, System>,
     pub token_program: Interface<'info, TokenInterface>,
 }
 
-impl ClaimUserWinnings<'_> {
-    pub fn claim_user_winnings(ctx: Context<ClaimUserWinnings>, round_index: u64) -> Result<()> {
-        let allocation = &ctx.accounts.platform_config.global_round_info.allocation;
+impl WithdrawAccumulatedFees<'_> {
+    pub fn withdraw_accumulated_fees(
+        ctx: Context<WithdrawAccumulatedFees>,
+        round_index: u64,
+    ) -> Result<()> {
+        let platform_config = &ctx.accounts.platform_config;
         let stablecoin = &ctx.accounts.stablecoin;
-        let round = &ctx.accounts.round;
+        let round = &mut ctx.accounts.round;
         let round_vault = &mut ctx.accounts.round_vault;
-        let user_bet = &mut ctx.accounts.user_bet;
 
         require!(round.ending_price != 0, error::ErrorCodes::VauleZero);
         require!(
-            !user_bet.has_claimed_winnings,
-            error::ErrorCodes::AlreadyClaimedWinnings
+            !round.has_claimed_platform_fees,
+            error::ErrorCodes::AlreadyCollectedPlatformFees
         );
+
+        round.has_claimed_platform_fees = true;
 
         let have_longs_won = if round.ending_price > round.starting_price {
             true
         } else {
             false
         };
-        require!(
-            (have_longs_won && user_bet.is_long) || (!have_longs_won && !user_bet.is_long),
-            error::ErrorCodes::IneligibleForClaim
-        );
-
-        user_bet.has_claimed_winnings = true;
-
-        let amount: u64;
-        if have_longs_won {
-            let pool_amount_to_claim_winnings_from = round
+        let platform_fee_amount = if have_longs_won {
+            round
                 .total_bet_amount_short
-                .checked_mul(allocation.winners_share as u64)
+                .checked_mul(platform_config.global_round_info.allocation.platform_share as u64)
                 .unwrap()
                 .checked_div(constants::general::BPS as u64)
-                .unwrap();
-
-            amount = user_bet
-                .amount
-                .checked_mul(pool_amount_to_claim_winnings_from)
                 .unwrap()
-                .checked_div(round.total_bet_amount_long)
-                .unwrap();
         } else {
-            let pool_amount_to_claim_winnings_from = round
-                .total_bet_amount_short
-                .checked_mul(allocation.winners_share as u64)
+            round
+                .total_bet_amount_long
+                .checked_mul(platform_config.global_round_info.allocation.platform_share as u64)
                 .unwrap()
                 .checked_div(constants::general::BPS as u64)
-                .unwrap();
-
-            amount = user_bet
-                .amount
-                .checked_mul(pool_amount_to_claim_winnings_from)
                 .unwrap()
-                .checked_div(round.total_bet_amount_short)
-                .unwrap();
-        }
+        };
 
-        require!(amount > 0, error::ErrorCodes::VauleZero);
+        require!(platform_fee_amount > 0, error::ErrorCodes::VauleZero);
 
         let round_index_be_bytes = round_index.to_be_bytes();
         let round_vault_bump = &[round.round_vault_bump];
@@ -136,20 +108,19 @@ impl ClaimUserWinnings<'_> {
                 TransferChecked {
                     from: round_vault.to_account_info(),
                     mint: stablecoin.to_account_info(),
-                    to: ctx.accounts.user_token_account.to_account_info(),
+                    to: ctx.accounts.owner_token_account.to_account_info(),
                     authority: round_vault.to_account_info(),
                 },
                 round_vault_signer,
             ),
-            amount,
+            platform_fee_amount,
             stablecoin.decimals,
         )?;
 
-        emit!(events::WinningsClaimed {
-            user: ctx.accounts.user.key(),
+        emit!(events::CollectedPlatformFees {
+            owner: ctx.accounts.owner.key(),
             round_index: round_index,
-            is_long: user_bet.is_long,
-            amount: amount
+            amount: platform_fee_amount
         });
 
         Ok(())

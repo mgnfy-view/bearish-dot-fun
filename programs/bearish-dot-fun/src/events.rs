@@ -82,3 +82,10 @@ pub struct WinningsClaimed {
     pub is_long: bool,
     pub amount: u64,
 }
+
+#[event]
+pub struct CollectedPlatformFees {
+    pub owner: Pubkey,
+    pub round_index: u64,
+    pub amount: u64,
+}

@@ -16,4 +16,8 @@ pub enum ErrorCodes {
     RoundAlreadyStarted,
     #[msg("Ineligible for claim.")]
     IneligibleForClaim,
+    #[msg("Already claimed winnings.")]
+    AlreadyClaimedWinnings,
+    #[msg("Already collected platform fees.")]
+    AlreadyCollectedPlatformFees,
 }

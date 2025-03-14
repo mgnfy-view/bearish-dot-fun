@@ -25,7 +25,6 @@ pub struct GlobalRoundInfo {
 pub struct PlatformConfig {
     pub owner: Pubkey,
     pub stablecoin: Pubkey,
-    pub accumulated_platform_fees: u64,
     pub global_round_info: GlobalRoundInfo,
 
     pub bump: u8,
