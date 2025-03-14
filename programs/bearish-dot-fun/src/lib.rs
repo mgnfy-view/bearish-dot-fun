@@ -70,4 +70,20 @@ pub mod bearish_dot_fun {
     pub fn set_affiliate(ctx: Context<SetAffiliate>) -> Result<()> {
         SetAffiliate::set_affiliate(ctx)
     }
+
+    pub fn start_round(ctx: Context<RunRound>) -> Result<()> {
+        RunRound::start_round(ctx)
+    }
+
+    pub fn end_round(ctx: Context<RunRound>) -> Result<()> {
+        RunRound::end_round(ctx)
+    }
+
+    pub fn place_bet(ctx: Context<PlaceBet>, amount: u64, is_long: bool) -> Result<()> {
+        PlaceBet::place_bet(ctx, amount, is_long)
+    }
+
+    pub fn claim_user_winnings(ctx: Context<ClaimUserWinnings>, round_index: u64) -> Result<()> {
+        ClaimUserWinnings::claim_user_winnings(ctx, round_index)
+    }
 }

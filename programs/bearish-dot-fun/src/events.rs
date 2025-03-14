@@ -74,3 +74,11 @@ pub struct BetPlaced {
     pub amount: u64,
     pub is_long: bool,
 }
+
+#[event]
+pub struct WinningsClaimed {
+    pub user: Pubkey,
+    pub round_index: u64,
+    pub is_long: bool,
+    pub amount: u64,
+}

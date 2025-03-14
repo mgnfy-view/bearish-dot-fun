@@ -4,7 +4,7 @@ use anchor_spl::{
     token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface},
 };
 
-use crate::{constants, events, Bet, PlatformConfig, Round, UserDeposit};
+use crate::{constants, error, events, Bet, PlatformConfig, Round, UserDeposit};
 
 #[derive(Accounts)]
 pub struct PlaceBet<'info> {
@@ -85,6 +85,8 @@ impl PlaceBet<'_> {
         let user_deposit = &mut ctx.accounts.user_deposit;
         let round = &mut ctx.accounts.round;
         let user_bet = &mut ctx.accounts.user_bet;
+
+        require!(amount > 0, error::ErrorCodes::VauleZero);
 
         user_deposit.amount -= amount;
         user_bet.amount += amount;

@@ -5,6 +5,7 @@ use anchor_lang::prelude::*;
 pub struct Bet {
     pub amount: u64,
     pub is_long: bool,
+    pub has_claimed_winnings: bool,
 
     pub bump: u8,
 }

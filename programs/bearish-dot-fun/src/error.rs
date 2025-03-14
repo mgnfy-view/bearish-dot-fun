@@ -14,4 +14,6 @@ pub enum ErrorCodes {
     InvalidAffiliate,
     #[msg("Round already started.")]
     RoundAlreadyStarted,
+    #[msg("Ineligible for claim.")]
+    IneligibleForClaim,
 }
