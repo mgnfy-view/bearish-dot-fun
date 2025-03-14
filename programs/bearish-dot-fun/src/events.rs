@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{Allocation, GlobalRoundInfo};
+use crate::{Allocation, GlobalRoundInfo, JackPotAllocation};
 
 #[event]
 pub struct Initialized {
@@ -11,6 +11,12 @@ pub struct Initialized {
 }
 
 #[event]
+pub struct OwnershipTransferred {
+    pub owner: Pubkey,
+    pub new_owner: Pubkey,
+}
+
+#[event]
 pub struct DurationSet {
     pub duration: u64,
 }
@@ -18,6 +24,11 @@ pub struct DurationSet {
 #[event]
 pub struct AllocationSet {
     pub allocation: Allocation,
+}
+
+#[event]
+pub struct JackPotAllocationSet {
+    pub jackpot_allocation: JackPotAllocation,
 }
 
 #[event]
@@ -80,6 +91,13 @@ pub struct WinningsClaimed {
     pub user: Pubkey,
     pub round_index: u64,
     pub is_long: bool,
+    pub amount: u64,
+}
+
+#[event]
+pub struct AffiliateWinningsClaimed {
+    pub affiliate: Pubkey,
+    pub round_index: u64,
     pub amount: u64,
 }
 

@@ -4,10 +4,10 @@ pub mod seeds {
     use super::*;
 
     #[constant]
-    pub const PLATFORM_VAULT: &[u8] = b"platform_vault";
+    pub const PLATFORM_CONFIG: &[u8] = b"platform_config";
 
     #[constant]
-    pub const ALLOCATION: &[u8] = b"allocation";
+    pub const PLATFORM_VAULT: &[u8] = b"platform_vault";
 
     #[constant]
     pub const USER: &[u8] = b"user";

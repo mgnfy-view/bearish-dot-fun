@@ -10,8 +10,11 @@ pub struct Round {
     pub ending_price: u64,
     pub long_positions: u64,
     pub short_positions: u64,
+    pub affiliates_for_long_positions: u64,
+    pub affiliates_for_short_positions: u64,
     pub total_bet_amount_long: u64,
     pub total_bet_amount_short: u64,
+    pub jackpot_pool_amount: u64,
     pub has_claimed_platform_fees: bool,
 
     pub bump: u8,
@@ -20,13 +23,16 @@ pub struct Round {
 
 impl Round {
     pub fn validate_starting_price(&self) -> Result<()> {
-        require!(self.starting_price > 0, error::ErrorCodes::VauleZero);
+        require!(
+            self.starting_price > 0,
+            error::ErrorCodes::PriceCannotBeZero
+        );
 
         Ok(())
     }
 
     pub fn validate_ending_price(&self) -> Result<()> {
-        require!(self.ending_price > 0, error::ErrorCodes::VauleZero);
+        require!(self.ending_price > 0, error::ErrorCodes::PriceCannotBeZero);
 
         Ok(())
     }
@@ -35,7 +41,10 @@ impl Round {
         let current_time = Clock::get()?.unix_timestamp as u64;
         let duration = current_time.checked_sub(self.start_time).unwrap();
 
-        require!(duration >= min_duration, error::ErrorCodes::InvalidDuration);
+        require!(
+            duration >= min_duration,
+            error::ErrorCodes::RoundHasNotEndedYet
+        );
 
         Ok(())
     }

@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{constants, events, Allocation, PlatformConfig};
+use crate::{constants, events, Allocation, JackPotAllocation, PlatformConfig};
 
 #[derive(Accounts)]
 pub struct SetPlatformConfig<'info> {
@@ -9,7 +9,7 @@ pub struct SetPlatformConfig<'info> {
 
     #[account(
         mut,
-        seeds = [constants::seeds::ALLOCATION],
+        seeds = [constants::seeds::PLATFORM_CONFIG],
         bump = platform_config.bump,
     )]
     pub platform_config: Account<'info, PlatformConfig>,
@@ -37,6 +37,23 @@ impl SetPlatformConfig<'_> {
 
         emit!(events::AllocationSet {
             allocation: allocation
+        });
+
+        Ok(())
+    }
+
+    pub fn set_jackpot_allocation(
+        ctx: Context<SetPlatformConfig>,
+        jackpot_allocation: JackPotAllocation,
+    ) -> Result<()> {
+        let platform_config = &mut ctx.accounts.platform_config;
+
+        platform_config.global_round_info.jackpot_allocation = jackpot_allocation.clone();
+
+        platform_config.validate_jackpot_allocation()?;
+
+        emit!(events::JackPotAllocationSet {
+            jackpot_allocation: jackpot_allocation
         });
 
         Ok(())

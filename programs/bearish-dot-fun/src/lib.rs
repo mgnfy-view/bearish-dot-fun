@@ -36,6 +36,10 @@ pub mod bearish_dot_fun {
         Initialize::initialize(ctx, global_round_info)
     }
 
+    pub fn transfer_ownership(ctx: Context<TransferOwnership>) -> Result<()> {
+        TransferOwnership::transfer_ownership(ctx)
+    }
+
     pub fn set_duration(ctx: Context<SetPlatformConfig>, duration: u64) -> Result<()> {
         SetPlatformConfig::set_duration(ctx, duration)
     }
@@ -44,12 +48,26 @@ pub mod bearish_dot_fun {
         SetPlatformConfig::set_allocation(ctx, allocation)
     }
 
+    pub fn set_jackpot_allocation(
+        ctx: Context<SetPlatformConfig>,
+        jackpot_allocation: JackPotAllocation,
+    ) -> Result<()> {
+        SetPlatformConfig::set_jackpot_allocation(ctx, jackpot_allocation)
+    }
+
     pub fn set_min_bet_amount(ctx: Context<SetPlatformConfig>, min_bet_amount: u64) -> Result<()> {
         SetPlatformConfig::set_min_bet_amount(ctx, min_bet_amount)
     }
 
     pub fn set_price_account(ctx: Context<SetPlatformConfig>, price_account: Pubkey) -> Result<()> {
         SetPlatformConfig::set_price_account(ctx, price_account)
+    }
+
+    pub fn withdraw_platform_fees(
+        ctx: Context<WithdrawAccumulatedFees>,
+        round_index: u64,
+    ) -> Result<()> {
+        WithdrawAccumulatedFees::withdraw_accumulated_fees(ctx, round_index)
     }
 
     pub fn set_staleness_threshold(
@@ -85,5 +103,12 @@ pub mod bearish_dot_fun {
 
     pub fn claim_user_winnings(ctx: Context<ClaimUserWinnings>, round_index: u64) -> Result<()> {
         ClaimUserWinnings::claim_user_winnings(ctx, round_index)
+    }
+
+    pub fn claim_affiliate_winnings(
+        ctx: Context<ClaimAffiliateWinnings>,
+        round_index: u64,
+    ) -> Result<()> {
+        ClaimAffiliateWinnings::claim_affiliate_winnings(ctx, round_index)
     }
 }

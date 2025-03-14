@@ -25,7 +25,7 @@ pub struct Initialize<'info> {
         init,
         payer = owner,
         space = constants::general::ANCHOR_DISCRIMINATOR_SIZE + PlatformConfig::INIT_SPACE,
-        seeds = [constants::seeds::ALLOCATION],
+        seeds = [constants::seeds::PLATFORM_CONFIG],
         bump,
     )]
     pub platform_config: Account<'info, PlatformConfig>,
@@ -52,6 +52,7 @@ impl Initialize<'_> {
 
         platform_config.validate_duration()?;
         platform_config.validate_allocation()?;
+        platform_config.validate_jackpot_allocation()?;
         platform_config.validate_price_account()?;
 
         emit!(events::Initialized {

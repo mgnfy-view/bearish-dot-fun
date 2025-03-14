@@ -4,7 +4,7 @@ use anchor_spl::{
     token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface},
 };
 
-use crate::{constants, error, events, Bet, PlatformConfig, Round, UserDeposit};
+use crate::{constants, error, events, Bet, PlatformConfig, Round, UserInfo};
 
 #[derive(Accounts)]
 pub struct PlaceBet<'info> {
@@ -12,7 +12,7 @@ pub struct PlaceBet<'info> {
     pub user: Signer<'info>,
 
     #[account(
-        seeds = [constants::seeds::ALLOCATION],
+        seeds = [constants::seeds::PLATFORM_CONFIG],
         bump = platform_config.bump,
     )]
     pub platform_config: Account<'info, PlatformConfig>,
@@ -35,9 +35,9 @@ pub struct PlaceBet<'info> {
             constants::seeds::USER,
             user.key().as_ref()
         ],
-        bump = user_deposit.bump,
+        bump = user_info.bump,
     )]
-    pub user_deposit: Account<'info, UserDeposit>,
+    pub user_info: Account<'info, UserInfo>,
 
     #[account(
         mut,
@@ -82,23 +82,35 @@ impl PlaceBet<'_> {
         let platform_config = &ctx.accounts.platform_config;
         let stablecoin = &ctx.accounts.stablecoin;
         let platform_vault = &ctx.accounts.platform_vault;
-        let user_deposit = &mut ctx.accounts.user_deposit;
+        let user_info = &mut ctx.accounts.user_info;
         let round = &mut ctx.accounts.round;
         let user_bet = &mut ctx.accounts.user_bet;
 
-        require!(amount > 0, error::ErrorCodes::VauleZero);
-
-        user_deposit.amount -= amount;
+        user_info.amount -= amount;
         user_bet.amount += amount;
+
+        user_bet.bump = ctx.bumps.user_bet;
 
         if is_long {
             round.long_positions += 1;
             round.total_bet_amount_long += amount;
             user_bet.is_long = true;
+
+            if user_info.affiliate != Pubkey::default() {
+                user_bet.affiliate = user_info.affiliate;
+                round.affiliates_for_long_positions += 1;
+            }
         } else {
             round.short_positions += 1;
             round.total_bet_amount_short += amount;
+
+            if user_info.affiliate != Pubkey::default() {
+                user_bet.affiliate = user_info.affiliate;
+                round.affiliates_for_short_positions += 1;
+            }
         }
+
+        user_bet.validate_amount()?;
 
         let platform_vault_bump = &[platform_config.platform_vault_bump];
         let platform_vault_signer = &[&[constants::seeds::PLATFORM_VAULT, platform_vault_bump][..]];

@@ -4,7 +4,7 @@ use anchor_spl::{
     token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface},
 };
 
-use crate::{constants, events, PlatformConfig, UserDeposit};
+use crate::{constants, error, events, PlatformConfig, UserInfo};
 
 #[derive(Accounts)]
 pub struct DepositAndWithdraw<'info> {
@@ -12,7 +12,7 @@ pub struct DepositAndWithdraw<'info> {
     pub user: Signer<'info>,
 
     #[account(
-        seeds = [constants::seeds::ALLOCATION],
+        seeds = [constants::seeds::PLATFORM_CONFIG],
         bump = platform_config.bump,
     )]
     pub platform_config: Account<'info, PlatformConfig>,
@@ -22,6 +22,8 @@ pub struct DepositAndWithdraw<'info> {
 
     #[account(
         mut,
+        seeds = [constants::seeds::PLATFORM_VAULT],
+        bump = platform_config.platform_vault_bump,
         token::mint = stablecoin,
         token::authority = platform_vault
     )]
@@ -37,14 +39,14 @@ pub struct DepositAndWithdraw<'info> {
     #[account(
         init_if_needed,
         payer = user,
-        space = constants::general::ANCHOR_DISCRIMINATOR_SIZE + UserDeposit::INIT_SPACE,
+        space = constants::general::ANCHOR_DISCRIMINATOR_SIZE + UserInfo::INIT_SPACE,
         seeds = [
             constants::seeds::USER,
             user.key().as_ref()
         ],
         bump,
     )]
-    pub user_deposit: Account<'info, UserDeposit>,
+    pub user_info: Account<'info, UserInfo>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Interface<'info, TokenInterface>,
@@ -54,12 +56,14 @@ impl DepositAndWithdraw<'_> {
     pub fn deposit(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
         let user = &ctx.accounts.user;
         let stablecoin = &ctx.accounts.stablecoin;
-        let user_deposit = &mut ctx.accounts.user_deposit;
+        let user_info = &mut ctx.accounts.user_info;
 
-        user_deposit.amount += amount;
+        require!(amount > 0, error::ErrorCodes::DepositAmountZero);
 
-        if user_deposit.bump == 0 {
-            user_deposit.bump = ctx.bumps.user_deposit;
+        user_info.amount += amount;
+
+        if user_info.bump == 0 {
+            user_info.bump = ctx.bumps.user_info;
         }
 
         transfer_checked(
@@ -76,8 +80,6 @@ impl DepositAndWithdraw<'_> {
             stablecoin.decimals,
         )?;
 
-        user_deposit.validate_amount()?;
-
         emit!(events::Deposited {
             user: user.key(),
             stablecoin: stablecoin.key(),
@@ -90,9 +92,12 @@ impl DepositAndWithdraw<'_> {
     pub fn withdraw(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
         let platform_config = &ctx.accounts.platform_config;
         let stablecoin = &ctx.accounts.stablecoin;
-        let user_deposit = &mut ctx.accounts.user_deposit;
+        let platform_vault = &mut ctx.accounts.platform_vault;
+        let user_info = &mut ctx.accounts.user_info;
 
-        user_deposit.amount -= amount;
+        require!(amount > 0, error::ErrorCodes::WithdrawAmountZero);
+
+        user_info.amount -= amount;
 
         let platform_vault_bump = &[platform_config.platform_vault_bump];
         let platform_vault_signer = &[&[constants::seeds::PLATFORM_VAULT, platform_vault_bump][..]];
@@ -101,10 +106,10 @@ impl DepositAndWithdraw<'_> {
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 TransferChecked {
-                    from: ctx.accounts.platform_vault.to_account_info(),
+                    from: platform_vault.to_account_info(),
                     mint: stablecoin.to_account_info(),
                     to: ctx.accounts.user_token_account.to_account_info(),
-                    authority: ctx.accounts.platform_vault.to_account_info(),
+                    authority: platform_vault.to_account_info(),
                 },
                 platform_vault_signer,
             ),

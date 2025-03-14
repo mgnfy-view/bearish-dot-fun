@@ -12,10 +12,13 @@ pub struct RunRound<'info> {
     pub owner: Signer<'info>,
 
     #[account(
-        seeds = [constants::seeds::ALLOCATION],
+        seeds = [constants::seeds::PLATFORM_CONFIG],
         bump = platform_config.bump,
     )]
     pub platform_config: Account<'info, PlatformConfig>,
+
+    #[account(address = platform_config.stablecoin)]
+    pub stablecoin: InterfaceAccount<'info, Mint>,
 
     #[account(
         init_if_needed,
@@ -28,9 +31,6 @@ pub struct RunRound<'info> {
         bump,
     )]
     pub round: Account<'info, Round>,
-
-    #[account()]
-    pub stablecoin: InterfaceAccount<'info, Mint>,
 
     #[account(
         init_if_needed,
@@ -63,14 +63,14 @@ impl RunRound<'_> {
             error::ErrorCodes::RoundAlreadyStarted
         );
 
+        let current_time = Clock::get()?.unix_timestamp as u64;
+        round.start_time = current_time;
+
         let price = utils::get_price(
             &ctx.accounts.price_account,
             platform_config.global_round_info.staleness_threshold,
         );
         round.starting_price = price;
-
-        let current_time = Clock::get()?.unix_timestamp as u64;
-        round.start_time = current_time;
 
         round.bump = ctx.bumps.round;
         round.round_vault_bump = ctx.bumps.round_vault;
@@ -89,12 +89,41 @@ impl RunRound<'_> {
         let platform_config = &mut ctx.accounts.platform_config;
         let round = &mut ctx.accounts.round;
 
+        require!(
+            round.ending_price == 0,
+            error::ErrorCodes::RoundAlreadyEnded
+        );
+
         let price = utils::get_price(
             &ctx.accounts.price_account,
             platform_config.global_round_info.staleness_threshold,
         );
         round.ending_price = price;
         platform_config.global_round_info.round += 1;
+
+        if platform_config.global_round_info.allocation.jackpot_share > 0 {
+            let have_longs_won = if round.ending_price > round.starting_price {
+                true
+            } else {
+                false
+            };
+
+            if have_longs_won {
+                round.jackpot_pool_amount = round
+                    .total_bet_amount_short
+                    .checked_mul(platform_config.global_round_info.allocation.jackpot_share as u64)
+                    .unwrap()
+                    .checked_div(constants::general::BPS as u64)
+                    .unwrap();
+            } else {
+                round.jackpot_pool_amount = round
+                    .total_bet_amount_long
+                    .checked_mul(platform_config.global_round_info.allocation.jackpot_share as u64)
+                    .unwrap()
+                    .checked_div(constants::general::BPS as u64)
+                    .unwrap();
+            }
+        }
 
         round.validate_round_duration(platform_config.global_round_info.duration)?;
 
