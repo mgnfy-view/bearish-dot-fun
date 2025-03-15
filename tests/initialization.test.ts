@@ -1,10 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
+import { assert } from "chai";
 import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
 import { pda, programMethods } from "./utils/utils";
 import { setup } from "./utils/setup";
 import { bumpRangeInclusive, sampleGlobalRoundInfo } from "./utils/constants";
-import { assert } from "chai";
 
 describe("bearish-dot-fun", () => {
     let owner: anchor.web3.Keypair,

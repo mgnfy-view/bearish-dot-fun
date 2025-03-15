@@ -1,10 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
+import { assert } from "chai";
 import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
 import { pda, programMethods } from "./utils/utils";
 import { setup } from "./utils/setup";
 import { bumpRangeInclusive, errors, sampleGlobalRoundInfo } from "./utils/constants";
-import { assert } from "chai";
 
 describe("bearish-dot-fun", () => {
     let owner: anchor.web3.Keypair,
@@ -22,16 +22,17 @@ describe("bearish-dot-fun", () => {
     it("Allows a user to set an affiliate", async () => {
         await programMethods.setAffiliate(user1, user2.publicKey, bearishDotFun);
 
-        const userAccount = await bearishDotFun.account.userInfo.fetch(
+        const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
             pda.getUserInfo(user1.publicKey, bearishDotFun)
         );
-        assert.equal(userAccount.amount.toNumber(), 0);
-        assert.equal(userAccount.affiliate.toString(), user2.publicKey.toString());
-        assert.equal(userAccount.lastWonRound.toNumber(), 0);
-        assert.equal(userAccount.timesWon.toNumber(), 0);
-        assert.equal(userAccount.amount.toNumber(), 0);
+        assert.equal(userInfoAccount.amount.toNumber(), 0);
+        assert.equal(userInfoAccount.affiliate.toString(), user2.publicKey.toString());
+        assert.equal(userInfoAccount.lastWonRound.toNumber(), 0);
+        assert.equal(userInfoAccount.timesWon.toNumber(), 0);
+        assert.equal(userInfoAccount.amount.toNumber(), 0);
         assert(
-            userAccount.bump >= bumpRangeInclusive[0] && userAccount.bump <= bumpRangeInclusive[1]
+            userInfoAccount.bump >= bumpRangeInclusive[0] &&
+                userInfoAccount.bump <= bumpRangeInclusive[1]
         );
     });
 
@@ -48,10 +49,13 @@ describe("bearish-dot-fun", () => {
     it("Allows a user to remove an affiliate by setting default pubkey as their affiliate", async () => {
         await programMethods.setAffiliate(user1, anchor.web3.PublicKey.default, bearishDotFun);
 
-        const userAccount = await bearishDotFun.account.userInfo.fetch(
+        const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
             pda.getUserInfo(user1.publicKey, bearishDotFun)
         );
-        assert.equal(userAccount.affiliate.toString(), anchor.web3.PublicKey.default.toString());
+        assert.equal(
+            userInfoAccount.affiliate.toString(),
+            anchor.web3.PublicKey.default.toString()
+        );
     });
 
     it("Doesn't allow a user to set themselves as affiliate", async () => {

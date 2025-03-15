@@ -9,3 +9,6 @@ sleep 2s
 
 anchor test tests/setAffiliate.test.ts --skip-build
 sleep 2s
+
+anchor test tests/deposit.test.ts --skip-build
+sleep 2s

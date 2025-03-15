@@ -79,6 +79,25 @@ const programMethods = {
 
         return txSignature;
     },
+    async deposit(
+        user: anchor.web3.Keypair,
+        stablecoin: anchor.web3.PublicKey,
+        amount: anchor.BN,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .deposit(amount)
+            .accounts({
+                user: user.publicKey,
+                stablecoin,
+                userTokenAccount: await spl.getAssociatedTokenAddress(stablecoin, user.publicKey),
+                tokenProgram: spl.TOKEN_PROGRAM_ID,
+            })
+            .signers([user])
+            .rpc();
+
+        return txSignature;
+    },
 };
 
 export { createSplTokenMint, transfer, pda, programMethods };
