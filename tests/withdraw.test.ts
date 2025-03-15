@@ -5,7 +5,7 @@ import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
 import { pda, programMethods } from "./utils/utils";
 import { setup } from "./utils/setup";
-import { bumpRangeInclusive, errors, sampleGlobalRoundInfo } from "./utils/constants";
+import { errors, sampleGlobalRoundInfo } from "./utils/constants";
 
 describe("bearish-dot-fun", () => {
     let provider: anchor.AnchorProvider,
@@ -51,10 +51,46 @@ describe("bearish-dot-fun", () => {
             bearishDotFun
         );
 
+        const user1BalanceAfter = (
+            await spl.getAccount(provider.connection, user1AssociatedTokenAccount)
+        ).amount;
+        assert.equal(Number(user1BalanceAfter), withdrawAmount);
+
+        const platformVaultBalanceAfter = (
+            await spl.getAccount(provider.connection, pda.getPlatformVault(bearishDotFun))
+        ).amount;
+        assert.equal(Number(platformVaultBalanceAfter), amount - withdrawAmount);
+
         const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
             pda.getUserInfo(user1.publicKey, bearishDotFun)
         );
         assert.equal(userInfoAccount.amount.toNumber(), amount - withdrawAmount);
+    });
+
+    it("Allows a user to withdraw deposited tokens multiple times as long as they have sufficient balance", async () => {
+        const withdrawAmount = amount / 2;
+
+        await programMethods.withdraw(
+            user1,
+            stablecoin,
+            new anchor.BN(withdrawAmount),
+            bearishDotFun
+        );
+
+        const user1BalanceAfter = (
+            await spl.getAccount(provider.connection, user1AssociatedTokenAccount)
+        ).amount;
+        assert.equal(Number(user1BalanceAfter), amount);
+
+        const platformVaultBalanceAfter = (
+            await spl.getAccount(provider.connection, pda.getPlatformVault(bearishDotFun))
+        ).amount;
+        assert.equal(Number(platformVaultBalanceAfter), 0);
+
+        const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
+            pda.getUserInfo(user1.publicKey, bearishDotFun)
+        );
+        assert.equal(userInfoAccount.amount.toNumber(), 0);
     });
 
     it("Does not allow a user to withdraw 0 tokens", async () => {

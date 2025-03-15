@@ -13,6 +13,7 @@ describe("bearish-dot-fun", () => {
         user1: anchor.web3.Keypair,
         stablecoin: anchor.web3.PublicKey,
         bearishDotFun: anchor.Program<BearishDotFun>;
+    const amount = 100 * anchor.web3.LAMPORTS_PER_SOL;
 
     before(async () => {
         ({ provider, owner, user1, stablecoin, bearishDotFun } = await setup());
@@ -27,7 +28,6 @@ describe("bearish-dot-fun", () => {
             stablecoin,
             user1.publicKey
         );
-        const amount = 100 * anchor.web3.LAMPORTS_PER_SOL;
         await spl.mintTo(
             provider.connection,
             user1,
@@ -38,6 +38,16 @@ describe("bearish-dot-fun", () => {
         );
 
         await programMethods.deposit(user1, stablecoin, new anchor.BN(amount), bearishDotFun);
+
+        const user1BalanceAfter = (
+            await spl.getAccount(provider.connection, user1AssociatedTokenAccount.address)
+        ).amount;
+        assert.equal(Number(user1BalanceAfter), 0);
+
+        const platformVaultBalanceAfter = (
+            await spl.getAccount(provider.connection, pda.getPlatformVault(bearishDotFun))
+        ).amount;
+        assert.equal(Number(platformVaultBalanceAfter), amount);
 
         const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
             pda.getUserInfo(user1.publicKey, bearishDotFun)
@@ -62,7 +72,7 @@ describe("bearish-dot-fun", () => {
             stablecoin,
             user1.publicKey
         );
-        const amount = 100 * anchor.web3.LAMPORTS_PER_SOL;
+
         await spl.mintTo(
             provider.connection,
             user1,
@@ -73,6 +83,16 @@ describe("bearish-dot-fun", () => {
         );
 
         await programMethods.deposit(user1, stablecoin, new anchor.BN(amount), bearishDotFun);
+
+        const user1BalanceAfter = (
+            await spl.getAccount(provider.connection, user1AssociatedTokenAccount.address)
+        ).amount;
+        assert.equal(Number(user1BalanceAfter), 0);
+
+        const platformVaultBalanceAfter = (
+            await spl.getAccount(provider.connection, pda.getPlatformVault(bearishDotFun))
+        ).amount;
+        assert.equal(Number(platformVaultBalanceAfter), amount * 2);
 
         const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
             pda.getUserInfo(user1.publicKey, bearishDotFun)

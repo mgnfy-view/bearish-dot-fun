@@ -37,6 +37,12 @@ const pda = {
             program.programId
         )[0];
     },
+    getPlatformVault(program: anchor.Program<BearishDotFun>) {
+        return anchor.web3.PublicKey.findProgramAddressSync(
+            [Buffer.from(seeds.platformVault)],
+            program.programId
+        )[0];
+    },
     getUserInfo(user: anchor.web3.PublicKey, program: anchor.Program<BearishDotFun>) {
         return anchor.web3.PublicKey.findProgramAddressSync(
             [Buffer.from(seeds.user), user.toBuffer()],
