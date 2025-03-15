@@ -16,8 +16,6 @@ pub enum ErrorCodes {
     DepositAmountZero,
     #[msg("Withdraw amount cannot be 0.")]
     WithdrawAmountZero,
-    #[msg("Affiliate already set.")]
-    AffiliateAlreadySet,
     #[msg("Invalid affiliate address.")]
     InvalidAffiliate,
     #[msg("Price cannot be 0.")]

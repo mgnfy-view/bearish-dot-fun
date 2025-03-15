@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "bungcip.better-toml",
-        "rust-lang.rust-analyzer"
+        "rust-lang.rust-analyzer",
+        "esbenp.prettier-vscode"
     ]
 }
