@@ -29,6 +29,10 @@ impl SetAffiliate<'_> {
 
         user_info.affiliate = affiliate;
 
+        if user_info.bump == 0 {
+            user_info.bump = ctx.bumps.user_info;
+        }
+
         user_info.validate_affiliate(user.key)?;
 
         emit!(events::AffiliateSet {

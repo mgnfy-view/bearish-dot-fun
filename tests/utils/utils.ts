@@ -37,6 +37,12 @@ const pda = {
             program.programId
         )[0];
     },
+    getUserInfo(user: anchor.web3.PublicKey, program: anchor.Program<BearishDotFun>) {
+        return anchor.web3.PublicKey.findProgramAddressSync(
+            [Buffer.from(seeds.user), user.toBuffer()],
+            program.programId
+        )[0];
+    },
 };
 
 const programMethods = {
@@ -53,6 +59,22 @@ const programMethods = {
                 stablecoin: stablecoin,
                 tokenProgram: spl.TOKEN_PROGRAM_ID,
             })
+            .signers([owner])
+            .rpc();
+
+        return txSignature;
+    },
+    async setAffiliate(
+        user: anchor.web3.Keypair,
+        affiliate: anchor.web3.PublicKey,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .setAffiliate(affiliate)
+            .accounts({
+                user: user.publicKey,
+            })
+            .signers([user])
             .rpc();
 
         return txSignature;

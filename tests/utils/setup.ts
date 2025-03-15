@@ -1,7 +1,8 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BearishDotFun } from "../../target/types/bearish_dot_fun";
 
-import { transfer } from "./utils";
+import { transfer, createSplTokenMint } from "./utils";
+import { decimals } from "./constants";
 
 export async function setup() {
     const provider = anchor.AnchorProvider.env();
@@ -16,6 +17,8 @@ export async function setup() {
     await transfer(provider, owner, user1.publicKey, airdropAmount);
     await transfer(provider, owner, user2.publicKey, airdropAmount);
 
+    const stablecoin = await createSplTokenMint(provider.connection, owner, decimals);
+
     const bearishDotFun = anchor.workspace.BearishDotFun as anchor.Program<BearishDotFun>;
 
     return {
@@ -23,6 +26,7 @@ export async function setup() {
         owner,
         user1,
         user2,
+        stablecoin,
         bearishDotFun,
     };
 }

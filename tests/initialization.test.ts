@@ -1,22 +1,18 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
-import { createSplTokenMint, pda, programMethods } from "./utils/utils";
+import { pda, programMethods } from "./utils/utils";
 import { setup } from "./utils/setup";
-import { bumpRangeInclusive, decimals, sampleGlobalRoundInfo } from "./utils/constants";
+import { bumpRangeInclusive, sampleGlobalRoundInfo } from "./utils/constants";
 import { assert } from "chai";
 
 describe("bearish-dot-fun", () => {
-    let provider: anchor.AnchorProvider,
-        owner: anchor.web3.Keypair,
-        user1: anchor.web3.Keypair,
-        user2: anchor.web3.Keypair,
+    let owner: anchor.web3.Keypair,
         stablecoin: anchor.web3.PublicKey,
         bearishDotFun: anchor.Program<BearishDotFun>;
 
     before(async () => {
-        ({ provider, owner, user1, user2, bearishDotFun } = await setup());
-        stablecoin = await createSplTokenMint(provider.connection, owner, decimals);
+        ({ owner, stablecoin, bearishDotFun } = await setup());
     });
 
     it("Can be initialized correctly", async () => {

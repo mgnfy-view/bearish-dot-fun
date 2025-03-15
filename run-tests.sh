@@ -5,4 +5,7 @@ anchor build
 echo -e "\nRunning tests..."
 
 anchor test tests/initialization.test.ts --skip-build
-sleep 1s
+sleep 2s
+
+anchor test tests/setAffiliate.test.ts --skip-build
+sleep 2s
