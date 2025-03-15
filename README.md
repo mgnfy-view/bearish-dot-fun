@@ -84,7 +84,8 @@ anchor build
 Run tests by executing,
 
 ```shell
-anchor test <test-name>
+chmod +x ./run-tests.sh
+./run-tests.sh
 ```
 
 That's it, you are good to go now!
@@ -93,7 +94,7 @@ That's it, you are good to go now!
 
 ## Roadmap
 
--   [ ] Solana program development
+-   [x] Solana program development
 -   [ ] Unit tests
 -   [x] Write a good README.md
 
