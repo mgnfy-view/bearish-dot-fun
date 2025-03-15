@@ -90,7 +90,6 @@ impl DepositAndWithdraw<'_> {
     }
 
     pub fn withdraw(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
-        let platform_config = &ctx.accounts.platform_config;
         let stablecoin = &ctx.accounts.stablecoin;
         let platform_vault = &mut ctx.accounts.platform_vault;
         let user_info = &mut ctx.accounts.user_info;
@@ -99,7 +98,7 @@ impl DepositAndWithdraw<'_> {
 
         user_info.amount -= amount;
 
-        let platform_vault_bump = &[platform_config.platform_vault_bump];
+        let platform_vault_bump = &[ctx.accounts.platform_config.platform_vault_bump];
         let platform_vault_signer = &[&[constants::seeds::PLATFORM_VAULT, platform_vault_bump][..]];
 
         transfer_checked(

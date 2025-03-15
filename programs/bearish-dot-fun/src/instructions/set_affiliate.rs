@@ -7,10 +7,6 @@ pub struct SetAffiliate<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    /// CHECK: The afffiliate being set by the user.
-    #[account()]
-    pub affiliate: AccountInfo<'info>,
-
     #[account(
         init_if_needed,
         payer = user,
@@ -27,18 +23,17 @@ pub struct SetAffiliate<'info> {
 }
 
 impl SetAffiliate<'_> {
-    pub fn set_affiliate(ctx: Context<SetAffiliate>) -> Result<()> {
+    pub fn set_affiliate(ctx: Context<SetAffiliate>, affiliate: Pubkey) -> Result<()> {
         let user = &ctx.accounts.user;
-        let affiliate = &ctx.accounts.affiliate;
         let user_info = &mut ctx.accounts.user_info;
 
-        user_info.affiliate = affiliate.key();
+        user_info.affiliate = affiliate;
 
         user_info.validate_affiliate(user.key)?;
 
         emit!(events::AffiliateSet {
             user: user.key(),
-            affiliate: affiliate.key()
+            affiliate: affiliate
         });
 
         Ok(())

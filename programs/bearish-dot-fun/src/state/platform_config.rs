@@ -29,6 +29,8 @@ pub struct GlobalRoundInfo {
     pub min_bet_amount: u64,
     pub price_account: Pubkey,
     pub staleness_threshold: u64,
+    pub jackpot_pool_amount: u64,
+    pub accumulated_platform_fees: u64,
 }
 
 #[account]

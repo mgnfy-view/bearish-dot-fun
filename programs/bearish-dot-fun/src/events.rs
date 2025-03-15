@@ -84,6 +84,7 @@ pub struct BetPlaced {
     pub round: u64,
     pub amount: u64,
     pub is_long: bool,
+    pub affiliate: Pubkey,
 }
 
 #[event]
@@ -104,6 +105,5 @@ pub struct AffiliateWinningsClaimed {
 #[event]
 pub struct CollectedPlatformFees {
     pub owner: Pubkey,
-    pub round_index: u64,
     pub amount: u64,
 }

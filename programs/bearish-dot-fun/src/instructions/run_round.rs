@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
+use anchor_spl::token_interface::{Mint, TokenInterface};
 
 use crate::{constants, error, events, utils, PlatformConfig, Round};
 
@@ -9,6 +9,7 @@ pub struct RunRound<'info> {
     pub user: Signer<'info>,
 
     #[account(
+        mut,
         seeds = [constants::seeds::PLATFORM_CONFIG],
         bump = platform_config.bump,
     )]
@@ -28,19 +29,6 @@ pub struct RunRound<'info> {
         bump,
     )]
     pub round: Account<'info, Round>,
-
-    #[account(
-        init_if_needed,
-        payer = user,
-        seeds = [
-            constants::seeds::ROUND_VAULT,
-            &(platform_config.global_round_info.round + 1).to_be_bytes()
-        ],
-        bump,
-        token::mint = stablecoin,
-        token::authority = round_vault,
-    )]
-    pub round_vault: InterfaceAccount<'info, TokenAccount>,
 
     /// CHECK: The pyth price account to fetch the latest price from.
     #[account(address = platform_config.global_round_info.price_account)]
@@ -63,14 +51,13 @@ impl RunRound<'_> {
         let current_time = Clock::get()?.unix_timestamp as u64;
         round.start_time = current_time;
 
-        let price = utils::get_price(
+        let price = utils::general::get_price(
             &ctx.accounts.price_account,
             platform_config.global_round_info.staleness_threshold,
         );
         round.starting_price = price;
 
         round.bump = ctx.bumps.round;
-        round.round_vault_bump = ctx.bumps.round_vault;
 
         round.validate_starting_price()?;
 
@@ -83,7 +70,7 @@ impl RunRound<'_> {
     }
 
     pub fn end_round(ctx: Context<RunRound>) -> Result<()> {
-        let platform_config = &mut ctx.accounts.platform_config;
+        let global_round_info = &mut ctx.accounts.platform_config.global_round_info;
         let round = &mut ctx.accounts.round;
 
         require!(
@@ -91,41 +78,73 @@ impl RunRound<'_> {
             error::ErrorCodes::RoundAlreadyEnded
         );
 
-        let price = utils::get_price(
+        let price = utils::general::get_price(
             &ctx.accounts.price_account,
-            platform_config.global_round_info.staleness_threshold,
+            global_round_info.staleness_threshold,
         );
         round.ending_price = price;
-        platform_config.global_round_info.round += 1;
+        global_round_info.round += 1;
 
-        if platform_config.global_round_info.allocation.jackpot_share > 0 {
-            let have_longs_won = if round.ending_price > round.starting_price {
-                true
-            } else {
-                false
-            };
+        let have_longs_won =
+            utils::math::is_greater_than(&round.ending_price, &round.starting_price);
+        if have_longs_won {
+            global_round_info.jackpot_pool_amount += u64::try_from(utils::math::mul_div_down(
+                &(round.total_bet_amount_short as u128),
+                &(global_round_info.allocation.jackpot_share as u128),
+                &(constants::general::BPS as u128),
+            ))
+            .unwrap();
 
-            if have_longs_won {
-                round.jackpot_pool_amount = round
-                    .total_bet_amount_short
-                    .checked_mul(platform_config.global_round_info.allocation.jackpot_share as u64)
-                    .unwrap()
-                    .checked_div(constants::general::BPS as u64)
-                    .unwrap();
-            } else {
-                round.jackpot_pool_amount = round
-                    .total_bet_amount_long
-                    .checked_mul(platform_config.global_round_info.allocation.jackpot_share as u64)
-                    .unwrap()
-                    .checked_div(constants::general::BPS as u64)
-                    .unwrap();
+            global_round_info.accumulated_platform_fees +=
+                u64::try_from(utils::math::mul_div_down(
+                    &(round.total_bet_amount_short as u128),
+                    &(global_round_info.allocation.platform_share as u128),
+                    &(constants::general::BPS as u128),
+                ))
+                .unwrap();
+
+            if round.total_bet_amount_long == 0 {
+                global_round_info.jackpot_pool_amount += u64::try_from(utils::math::mul_div_down(
+                    &(round.total_bet_amount_short as u128),
+                    &((global_round_info.allocation.winners_share
+                        + global_round_info.allocation.affiliate_share)
+                        as u128),
+                    &(constants::general::BPS as u128),
+                ))
+                .unwrap();
+            }
+        } else {
+            global_round_info.jackpot_pool_amount += u64::try_from(utils::math::mul_div_down(
+                &(round.total_bet_amount_long as u128),
+                &(global_round_info.allocation.jackpot_share as u128),
+                &(constants::general::BPS as u128),
+            ))
+            .unwrap();
+
+            global_round_info.accumulated_platform_fees +=
+                u64::try_from(utils::math::mul_div_down(
+                    &(round.total_bet_amount_long as u128),
+                    &(global_round_info.allocation.platform_share as u128),
+                    &(constants::general::BPS as u128),
+                ))
+                .unwrap();
+
+            if round.total_bet_amount_short == 0 {
+                global_round_info.jackpot_pool_amount += u64::try_from(utils::math::mul_div_down(
+                    &(round.total_bet_amount_long as u128),
+                    &((global_round_info.allocation.winners_share
+                        + global_round_info.allocation.affiliate_share)
+                        as u128),
+                    &(constants::general::BPS as u128),
+                ))
+                .unwrap();
             }
         }
 
-        round.validate_round_duration(platform_config.global_round_info.duration)?;
+        round.validate_round_duration(global_round_info.duration)?;
 
         emit!(events::RoundEnded {
-            round: platform_config.global_round_info.round,
+            round: global_round_info.round,
             ending_price: price
         });
 

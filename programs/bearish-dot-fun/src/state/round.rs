@@ -14,11 +14,8 @@ pub struct Round {
     pub affiliates_for_short_positions: u64,
     pub total_bet_amount_long: u64,
     pub total_bet_amount_short: u64,
-    pub jackpot_pool_amount: u64,
-    pub has_claimed_platform_fees: bool,
 
     pub bump: u8,
-    pub round_vault_bump: u8,
 }
 
 impl Round {

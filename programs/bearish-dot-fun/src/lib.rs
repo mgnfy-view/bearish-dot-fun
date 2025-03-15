@@ -9,7 +9,6 @@ use anchor_lang::prelude::*;
 #[cfg(not(feature = "no-entrypoint"))]
 use solana_security_txt::security_txt;
 
-pub use constants::*;
 pub use events::*;
 pub use instructions::*;
 pub use state::*;
@@ -63,18 +62,15 @@ pub mod bearish_dot_fun {
         SetPlatformConfig::set_price_account(ctx, price_account)
     }
 
-    pub fn withdraw_platform_fees(
-        ctx: Context<WithdrawAccumulatedFees>,
-        round_index: u64,
-    ) -> Result<()> {
-        WithdrawAccumulatedFees::withdraw_accumulated_fees(ctx, round_index)
-    }
-
     pub fn set_staleness_threshold(
         ctx: Context<SetPlatformConfig>,
         staleness_threshold: u64,
     ) -> Result<()> {
         SetPlatformConfig::set_staleness_threshold(ctx, staleness_threshold)
+    }
+
+    pub fn withdraw_platform_fees(ctx: Context<WithdrawPlatformFees>) -> Result<()> {
+        WithdrawPlatformFees::withdraw_platform_fees(ctx)
     }
 
     pub fn deposit(ctx: Context<DepositAndWithdraw>, amount: u64) -> Result<()> {
@@ -85,8 +81,8 @@ pub mod bearish_dot_fun {
         DepositAndWithdraw::withdraw(ctx, amount)
     }
 
-    pub fn set_affiliate(ctx: Context<SetAffiliate>) -> Result<()> {
-        SetAffiliate::set_affiliate(ctx)
+    pub fn set_affiliate(ctx: Context<SetAffiliate>, affiliate: Pubkey) -> Result<()> {
+        SetAffiliate::set_affiliate(ctx, affiliate)
     }
 
     pub fn start_round(ctx: Context<RunRound>) -> Result<()> {

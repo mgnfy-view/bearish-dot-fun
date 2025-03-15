@@ -3,7 +3,7 @@ use anchor_spl::token_interface::{
     transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked,
 };
 
-use crate::{constants, error, events, Bet, PlatformConfig, Round};
+use crate::{constants, error, events, utils, Bet, PlatformConfig, Round};
 
 #[derive(Accounts)]
 #[instruction(round_index: u64)]
@@ -12,7 +12,7 @@ pub struct ClaimAffiliateWinnings<'info> {
     #[account()]
     pub user: AccountInfo<'info>,
 
-    #[account()]
+    #[account(address = user_bet.affiliate)]
     pub affiliate: Signer<'info>,
 
     #[account(
@@ -20,6 +20,15 @@ pub struct ClaimAffiliateWinnings<'info> {
         bump = platform_config.bump,
     )]
     pub platform_config: Account<'info, PlatformConfig>,
+
+    #[account(
+        mut,
+        seeds = [constants::seeds::PLATFORM_VAULT],
+        bump = platform_config.platform_vault_bump,
+        token::mint = stablecoin,
+        token::authority = platform_vault
+    )]
+    pub platform_vault: InterfaceAccount<'info, TokenAccount>,
 
     #[account(address = platform_config.stablecoin)]
     pub stablecoin: InterfaceAccount<'info, Mint>,
@@ -32,18 +41,6 @@ pub struct ClaimAffiliateWinnings<'info> {
         bump = round.bump,
     )]
     pub round: Account<'info, Round>,
-
-    #[account(
-        mut,
-        seeds = [
-            constants::seeds::ROUND_VAULT,
-            &round_index.to_be_bytes()
-        ],
-        bump = round.round_vault_bump,
-        token::mint = stablecoin,
-        token::authority = round_vault,
-    )]
-    pub round_vault: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -72,9 +69,9 @@ impl ClaimAffiliateWinnings<'_> {
         round_index: u64,
     ) -> Result<()> {
         let allocation = &ctx.accounts.platform_config.global_round_info.allocation;
+        let platform_vault = &mut ctx.accounts.platform_vault;
         let stablecoin = &ctx.accounts.stablecoin;
         let round = &ctx.accounts.round;
-        let round_vault = &mut ctx.accounts.round_vault;
         let user_bet = &mut ctx.accounts.user_bet;
 
         require!(
@@ -86,11 +83,8 @@ impl ClaimAffiliateWinnings<'_> {
             error::ErrorCodes::AlreadyClaimedWinnings
         );
 
-        let have_longs_won = if round.ending_price > round.starting_price {
-            true
-        } else {
-            false
-        };
+        let have_longs_won =
+            utils::math::is_greater_than(&round.ending_price, &round.starting_price);
         require!(
             (have_longs_won && user_bet.is_long) || (!have_longs_won && !user_bet.is_long),
             error::ErrorCodes::IneligibleForClaim
@@ -98,23 +92,27 @@ impl ClaimAffiliateWinnings<'_> {
 
         user_bet.has_affiliate_claimed_winnings = true;
 
+        let affiliate_pool_amount_to_claim_winnings_from: u64;
         let amount: u64;
         if have_longs_won {
-            let affiliate_pool_amount_to_claim_winnings_from = round
-                .total_bet_amount_short
-                .checked_mul(allocation.affiliate_share as u64)
-                .unwrap()
-                .checked_div(constants::general::BPS as u64)
+            affiliate_pool_amount_to_claim_winnings_from =
+                u64::try_from(utils::math::mul_div_down(
+                    &(round.total_bet_amount_short as u128),
+                    &(allocation.affiliate_share as u128),
+                    &(constants::general::BPS as u128),
+                ))
                 .unwrap();
+
             amount = affiliate_pool_amount_to_claim_winnings_from
                 .checked_div(round.affiliates_for_long_positions)
                 .unwrap();
         } else {
-            let affiliate_pool_amount_to_claim_winnings_from = round
-                .total_bet_amount_long
-                .checked_mul(allocation.affiliate_share as u64)
-                .unwrap()
-                .checked_div(constants::general::BPS as u64)
+            affiliate_pool_amount_to_claim_winnings_from =
+                u64::try_from(utils::math::mul_div_down(
+                    &(round.total_bet_amount_long as u128),
+                    &(allocation.affiliate_share as u128),
+                    &(constants::general::BPS as u128),
+                ))
                 .unwrap();
             amount = affiliate_pool_amount_to_claim_winnings_from
                 .checked_div(round.affiliates_for_short_positions)
@@ -123,24 +121,19 @@ impl ClaimAffiliateWinnings<'_> {
 
         require!(amount > 0, error::ErrorCodes::ClaimAmountZero);
 
-        let round_index_be_bytes = round_index.to_be_bytes();
-        let round_vault_bump = &[round.round_vault_bump];
-        let round_vault_signer = &[&[
-            constants::seeds::ROUND_VAULT,
-            &round_index_be_bytes,
-            round_vault_bump,
-        ][..]];
+        let platform_vault_bump = &[ctx.accounts.platform_config.platform_vault_bump];
+        let platform_vault_signer = &[&[constants::seeds::PLATFORM_VAULT, platform_vault_bump][..]];
 
         transfer_checked(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 TransferChecked {
-                    from: round_vault.to_account_info(),
+                    from: platform_vault.to_account_info(),
                     mint: stablecoin.to_account_info(),
-                    to: ctx.accounts.affiliate.to_account_info(),
-                    authority: round_vault.to_account_info(),
+                    to: ctx.accounts.affiliate_token_account.to_account_info(),
+                    authority: platform_vault.to_account_info(),
                 },
-                round_vault_signer,
+                platform_vault_signer,
             ),
             amount,
             stablecoin.decimals,

@@ -7,6 +7,7 @@ use crate::error;
 pub struct UserInfo {
     pub amount: u64,
     pub affiliate: Pubkey,
+    pub last_won_round: u64,
     pub times_won: u64,
 
     pub bump: u8,

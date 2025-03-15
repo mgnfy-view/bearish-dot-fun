@@ -1,18 +1,17 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    token_2022::TransferChecked,
-    token_interface::{transfer_checked, Mint, TokenAccount, TokenInterface},
+use anchor_spl::token_interface::{
+    transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked,
 };
 
-use crate::{constants, error, events, PlatformConfig, Round};
+use crate::{constants, error, events, PlatformConfig};
 
 #[derive(Accounts)]
-#[instruction(round_index: u64)]
-pub struct WithdrawAccumulatedFees<'info> {
+pub struct WithdrawPlatformFees<'info> {
     #[account(address = platform_config.owner)]
     pub owner: Signer<'info>,
 
     #[account(
+        mut,
         seeds = [constants::seeds::PLATFORM_CONFIG],
         bump = platform_config.bump,
     )]
@@ -23,110 +22,58 @@ pub struct WithdrawAccumulatedFees<'info> {
 
     #[account(
         mut,
+        seeds = [constants::seeds::PLATFORM_VAULT],
+        bump = platform_config.platform_vault_bump,
+        token::mint = stablecoin,
+        token::authority = platform_vault
+    )]
+    pub platform_vault: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        mut,
         token::mint = stablecoin,
         token::authority = owner,
     )]
     pub owner_token_account: InterfaceAccount<'info, TokenAccount>,
 
-    #[account(
-        mut,
-        seeds = [
-            constants::seeds::ROUND,
-            &round_index.to_be_bytes()
-        ],
-        bump = round.bump,
-    )]
-    pub round: Account<'info, Round>,
-
-    #[account(
-        mut,
-        seeds = [
-            constants::seeds::ROUND_VAULT,
-            &round_index.to_be_bytes()
-        ],
-        bump = round.round_vault_bump,
-        token::mint = stablecoin,
-        token::authority = round_vault,
-    )]
-    pub round_vault: InterfaceAccount<'info, TokenAccount>,
-
     pub token_program: Interface<'info, TokenInterface>,
 }
 
-impl WithdrawAccumulatedFees<'_> {
-    pub fn withdraw_accumulated_fees(
-        ctx: Context<WithdrawAccumulatedFees>,
-        round_index: u64,
-    ) -> Result<()> {
-        let platform_config = &ctx.accounts.platform_config;
+impl WithdrawPlatformFees<'_> {
+    pub fn withdraw_platform_fees(ctx: Context<WithdrawPlatformFees>) -> Result<()> {
+        let platform_config = &mut ctx.accounts.platform_config;
         let stablecoin = &ctx.accounts.stablecoin;
-        let round = &mut ctx.accounts.round;
-        let round_vault = &mut ctx.accounts.round_vault;
+        let platform_vault = &mut ctx.accounts.platform_vault;
 
+        let accumulated_platform_fees = platform_config.global_round_info.accumulated_platform_fees;
         require!(
-            round.ending_price != 0,
-            error::ErrorCodes::PriceCannotBeZero
-        );
-        require!(
-            !round.has_claimed_platform_fees,
-            error::ErrorCodes::AlreadyCollectedPlatformFees
-        );
-
-        round.has_claimed_platform_fees = true;
-
-        let have_longs_won = if round.ending_price > round.starting_price {
-            true
-        } else {
-            false
-        };
-        let platform_fee_amount = if have_longs_won {
-            round
-                .total_bet_amount_short
-                .checked_mul(platform_config.global_round_info.allocation.platform_share as u64)
-                .unwrap()
-                .checked_div(constants::general::BPS as u64)
-                .unwrap()
-        } else {
-            round
-                .total_bet_amount_long
-                .checked_mul(platform_config.global_round_info.allocation.platform_share as u64)
-                .unwrap()
-                .checked_div(constants::general::BPS as u64)
-                .unwrap()
-        };
-
-        require!(
-            platform_fee_amount > 0,
+            accumulated_platform_fees > 0,
             error::ErrorCodes::PlatformFeeAmountZero
         );
 
-        let round_index_be_bytes = round_index.to_be_bytes();
-        let round_vault_bump = &[round.round_vault_bump];
-        let round_vault_signer = &[&[
-            constants::seeds::ROUND_VAULT,
-            &round_index_be_bytes,
-            round_vault_bump,
-        ][..]];
+        platform_config.global_round_info.accumulated_platform_fees = 0;
+
+        let platform_vault_bump = &[platform_config.platform_vault_bump];
+        let platform_vault_signer = &[&[constants::seeds::PLATFORM_VAULT, platform_vault_bump][..]];
 
         transfer_checked(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 TransferChecked {
-                    from: round_vault.to_account_info(),
+                    from: platform_vault.to_account_info(),
                     mint: stablecoin.to_account_info(),
                     to: ctx.accounts.owner_token_account.to_account_info(),
-                    authority: round_vault.to_account_info(),
+                    authority: platform_vault.to_account_info(),
                 },
-                round_vault_signer,
+                platform_vault_signer,
             ),
-            platform_fee_amount,
+            accumulated_platform_fees,
             stablecoin.decimals,
         )?;
 
         emit!(events::CollectedPlatformFees {
             owner: ctx.accounts.owner.key(),
-            round_index: round_index,
-            amount: platform_fee_amount
+            amount: accumulated_platform_fees
         });
 
         Ok(())
