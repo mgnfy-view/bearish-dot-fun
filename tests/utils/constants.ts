@@ -1,3 +1,7 @@
+import * as anchor from "@coral-xyz/anchor";
+
+import { GlobalRoundInfo } from "./types";
+
 const decimals = 9;
 const bumpRangeInclusive = [1, 255];
 
@@ -30,4 +34,28 @@ const errors = {
     platformFeeAmountZero: "Platform fee amount to collect is 0.",
 };
 
-export { decimals, bumpRangeInclusive, seeds, errors };
+const sampleGlobalRoundInfo: GlobalRoundInfo = {
+    round: new anchor.BN(0),
+    duration: new anchor.BN(10),
+    allocation: {
+        winnersShare: 4500,
+        affiliateShare: 500,
+        jackpotShare: 4000,
+        platformShare: 1000,
+    },
+    jackpotAllocation: {
+        streak5: 1000,
+        streak6: 1500,
+        streak7: 2000,
+        streak8: 2500,
+        streak9: 3000,
+        streak10: 10000,
+    },
+    minBetAmount: new anchor.BN(0),
+    priceAccount: new anchor.web3.PublicKey("4cSM2e6rvbGQUFiJbqytoVMi5GgghSMr8LwVrT9VPSPo"),
+    stalenessThreshold: new anchor.BN(600),
+    jackpotPoolAmount: new anchor.BN(0),
+    accumulatedPlatformFees: new anchor.BN(0),
+};
+
+export { decimals, bumpRangeInclusive, seeds, errors, sampleGlobalRoundInfo };

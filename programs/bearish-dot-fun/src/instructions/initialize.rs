@@ -47,6 +47,7 @@ impl Initialize<'_> {
 
         platform_config.global_round_info.round = 0;
         platform_config.global_round_info.jackpot_pool_amount = 0;
+        platform_config.global_round_info.accumulated_platform_fees = 0;
 
         platform_config.bump = ctx.bumps.platform_config;
         platform_config.platform_vault_bump = ctx.bumps.platform_vault;
