@@ -70,6 +70,22 @@ const programMethods = {
 
         return txSignature;
     },
+    async transferOwnership(
+        owner: anchor.web3.Keypair,
+        newOwner: anchor.web3.Keypair,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .transferOwnership()
+            .accounts({
+                owner: owner.publicKey,
+                newOwner: newOwner.publicKey,
+            })
+            .signers([owner, newOwner])
+            .rpc();
+
+        return txSignature;
+    },
     async setAffiliate(
         user: anchor.web3.Keypair,
         affiliate: anchor.web3.PublicKey,
