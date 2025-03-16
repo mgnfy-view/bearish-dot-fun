@@ -59,6 +59,16 @@ const pda = {
             program.programId
         )[0];
     },
+    getUserBet(user: anchor.web3.PublicKey, index: number, program: anchor.Program<BearishDotFun>) {
+        return anchor.web3.PublicKey.findProgramAddressSync(
+            [
+                Buffer.from(seeds.userBet),
+                user.toBuffer(),
+                new anchor.BN(index).toArrayLike(Buffer, "be", 8),
+            ],
+            program.programId
+        )[0];
+    },
 };
 
 const programMethods = {
@@ -270,6 +280,25 @@ const programMethods = {
                 user: user.publicKey,
                 round: pda.getRound(index, program),
                 priceAccount: sampleGlobalRoundInfo.priceAccount,
+            })
+            .signers([user])
+            .rpc();
+
+        return txSignature;
+    },
+    async placeBet(
+        user: anchor.web3.Keypair,
+        amount: anchor.BN,
+        isLong: boolean,
+        index: number,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .placeBet(amount, isLong)
+            .accounts({
+                user: user.publicKey,
+                round: pda.getRound(index, program),
+                userBet: pda.getUserBet(user.publicKey, index, program),
             })
             .signers([user])
             .rpc();
