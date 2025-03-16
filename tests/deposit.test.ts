@@ -18,7 +18,13 @@ describe("bearish-dot-fun", () => {
     before(async () => {
         ({ provider, owner, user1, stablecoin, bearishDotFun } = await setup());
 
-        await programMethods.initialize(owner, stablecoin, sampleGlobalRoundInfo, bearishDotFun);
+        await programMethods.initialize(
+            owner,
+            stablecoin,
+            sampleGlobalRoundInfo,
+            spl.TOKEN_PROGRAM_ID,
+            bearishDotFun
+        );
     });
 
     it("Allows a user to deposit tokens", async () => {
@@ -37,7 +43,13 @@ describe("bearish-dot-fun", () => {
             amount
         );
 
-        await programMethods.deposit(user1, stablecoin, new anchor.BN(amount), bearishDotFun);
+        await programMethods.deposit(
+            user1,
+            stablecoin,
+            new anchor.BN(amount),
+            spl.TOKEN_PROGRAM_ID,
+            bearishDotFun
+        );
 
         const user1BalanceAfter = (
             await spl.getAccount(provider.connection, user1AssociatedTokenAccount.address)
@@ -78,7 +90,13 @@ describe("bearish-dot-fun", () => {
             amount
         );
 
-        await programMethods.deposit(user1, stablecoin, new anchor.BN(amount), bearishDotFun);
+        await programMethods.deposit(
+            user1,
+            stablecoin,
+            new anchor.BN(amount),
+            spl.TOKEN_PROGRAM_ID,
+            bearishDotFun
+        );
 
         const user1BalanceAfter = (
             await spl.getAccount(provider.connection, user1AssociatedTokenAccount.address)
@@ -104,7 +122,13 @@ describe("bearish-dot-fun", () => {
         const amount = 0;
 
         try {
-            await programMethods.deposit(user1, stablecoin, new anchor.BN(amount), bearishDotFun);
+            await programMethods.deposit(
+                user1,
+                stablecoin,
+                new anchor.BN(amount),
+                spl.TOKEN_PROGRAM_ID,
+                bearishDotFun
+            );
         } catch (error) {
             assert.strictEqual(
                 (error as anchor.AnchorError).error.errorMessage,

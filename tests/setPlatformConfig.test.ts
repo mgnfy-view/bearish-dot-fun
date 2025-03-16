@@ -1,4 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
+import * as spl from "@solana/spl-token";
 import { assert } from "chai";
 import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
@@ -16,7 +17,13 @@ describe("bearish-dot-fun", () => {
     before(async () => {
         ({ owner, user1, stablecoin, bearishDotFun } = await setup());
 
-        await programMethods.initialize(owner, stablecoin, sampleGlobalRoundInfo, bearishDotFun);
+        await programMethods.initialize(
+            owner,
+            stablecoin,
+            sampleGlobalRoundInfo,
+            spl.TOKEN_PROGRAM_ID,
+            bearishDotFun
+        );
     });
 
     it("Allows setting duration", async () => {
@@ -155,8 +162,8 @@ describe("bearish-dot-fun", () => {
 
     it("Allows setting price account", async () => {
         const newPriceAccount = new anchor.web3.PublicKey(
-            "7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"
-        ); // SOL/USD price account
+            "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
+        ); // SOL/USD price account on mainnet
 
         await programMethods.setPriceAccount(owner, newPriceAccount, bearishDotFun);
 

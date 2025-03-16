@@ -19,7 +19,13 @@ describe("bearish-dot-fun", () => {
     before(async () => {
         ({ provider, owner, user1, stablecoin, bearishDotFun } = await setup());
 
-        await programMethods.initialize(owner, stablecoin, sampleGlobalRoundInfo, bearishDotFun);
+        await programMethods.initialize(
+            owner,
+            stablecoin,
+            sampleGlobalRoundInfo,
+            spl.TOKEN_PROGRAM_ID,
+            bearishDotFun
+        );
 
         user1AssociatedTokenAccount = (
             await spl.getOrCreateAssociatedTokenAccount(
@@ -38,7 +44,13 @@ describe("bearish-dot-fun", () => {
             owner,
             amount
         );
-        await programMethods.deposit(user1, stablecoin, new anchor.BN(amount), bearishDotFun);
+        await programMethods.deposit(
+            user1,
+            stablecoin,
+            new anchor.BN(amount),
+            spl.TOKEN_PROGRAM_ID,
+            bearishDotFun
+        );
     });
 
     it("Allows a user to withdraw deposited tokens", async () => {
@@ -48,6 +60,7 @@ describe("bearish-dot-fun", () => {
             user1,
             stablecoin,
             new anchor.BN(withdrawAmount),
+            spl.TOKEN_PROGRAM_ID,
             bearishDotFun
         );
 
@@ -74,6 +87,7 @@ describe("bearish-dot-fun", () => {
             user1,
             stablecoin,
             new anchor.BN(withdrawAmount),
+            spl.TOKEN_PROGRAM_ID,
             bearishDotFun
         );
 
@@ -99,6 +113,7 @@ describe("bearish-dot-fun", () => {
                 user1,
                 stablecoin,
                 new anchor.BN(new anchor.BN(0)),
+                spl.TOKEN_PROGRAM_ID,
                 bearishDotFun
             );
         } catch (error) {
@@ -117,6 +132,7 @@ describe("bearish-dot-fun", () => {
                 user1,
                 stablecoin,
                 new anchor.BN(withdrawAmount),
+                spl.TOKEN_PROGRAM_ID,
                 bearishDotFun
             );
         } catch {}

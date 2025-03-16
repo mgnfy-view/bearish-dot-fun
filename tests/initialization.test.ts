@@ -1,4 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
+import * as spl from "@solana/spl-token";
 import { assert } from "chai";
 import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
@@ -16,7 +17,13 @@ describe("bearish-dot-fun", () => {
     });
 
     it("Can be initialized correctly", async () => {
-        await programMethods.initialize(owner, stablecoin, sampleGlobalRoundInfo, bearishDotFun);
+        await programMethods.initialize(
+            owner,
+            stablecoin,
+            sampleGlobalRoundInfo,
+            spl.TOKEN_PROGRAM_ID,
+            bearishDotFun
+        );
 
         const platformConfigAccount = await bearishDotFun.account.platformConfig.fetch(
             pda.getPlatformConfig(bearishDotFun)
@@ -75,6 +82,7 @@ describe("bearish-dot-fun", () => {
                 owner,
                 stablecoin,
                 sampleGlobalRoundInfo,
+                spl.TOKEN_PROGRAM_ID,
                 bearishDotFun
             );
         } catch {}

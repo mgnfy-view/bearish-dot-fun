@@ -21,3 +21,6 @@ sleep 2s
 
 anchor test tests/withdraw.test.ts --skip-build
 sleep 2s
+
+anchor test tests/startRound.test.ts --skip-build
+sleep 2s

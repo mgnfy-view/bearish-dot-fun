@@ -4,7 +4,7 @@ import { Connection, sendAndConfirmTransaction, SystemProgram, Transaction } fro
 import { BearishDotFun } from "../../target/types/bearish_dot_fun";
 
 import { Allocation, GlobalRoundInfo, JackPotAllocation } from "./types";
-import { seeds } from "./constants";
+import { sampleGlobalRoundInfo, seeds } from "./constants";
 
 async function createSplTokenMint(
     connection: Connection,
@@ -49,6 +49,12 @@ const pda = {
             program.programId
         )[0];
     },
+    getRound(index: number, program: anchor.Program<BearishDotFun>) {
+        return anchor.web3.PublicKey.findProgramAddressSync(
+            [Buffer.from(seeds.round), new anchor.BN(index).toArrayLike(Buffer, "be", 8)],
+            program.programId
+        )[0];
+    },
 };
 
 const programMethods = {
@@ -56,6 +62,7 @@ const programMethods = {
         owner: anchor.web3.Keypair,
         stablecoin: anchor.web3.PublicKey,
         globalRoundInfo: GlobalRoundInfo,
+        tokenProgramId: anchor.web3.PublicKey,
         program: anchor.Program<BearishDotFun>
     ) {
         const txSignature = await program.methods
@@ -63,7 +70,7 @@ const programMethods = {
             .accounts({
                 owner: owner.publicKey,
                 stablecoin: stablecoin,
-                tokenProgram: spl.TOKEN_PROGRAM_ID,
+                tokenProgram: tokenProgramId,
             })
             .signers([owner])
             .rpc();
@@ -195,6 +202,7 @@ const programMethods = {
         user: anchor.web3.Keypair,
         stablecoin: anchor.web3.PublicKey,
         amount: anchor.BN,
+        tokenProgramId: anchor.web3.PublicKey,
         program: anchor.Program<BearishDotFun>
     ) {
         const txSignature = await program.methods
@@ -203,7 +211,7 @@ const programMethods = {
                 user: user.publicKey,
                 stablecoin,
                 userTokenAccount: await spl.getAssociatedTokenAddress(stablecoin, user.publicKey),
-                tokenProgram: spl.TOKEN_PROGRAM_ID,
+                tokenProgram: tokenProgramId,
             })
             .signers([user])
             .rpc();
@@ -214,6 +222,7 @@ const programMethods = {
         user: anchor.web3.Keypair,
         stablecoin: anchor.web3.PublicKey,
         amount: anchor.BN,
+        tokenProgramId: anchor.web3.PublicKey,
         program: anchor.Program<BearishDotFun>
     ) {
         const txSignature = await program.methods
@@ -222,7 +231,41 @@ const programMethods = {
                 user: user.publicKey,
                 stablecoin,
                 userTokenAccount: await spl.getAssociatedTokenAddress(stablecoin, user.publicKey),
-                tokenProgram: spl.TOKEN_PROGRAM_ID,
+                tokenProgram: tokenProgramId,
+            })
+            .signers([user])
+            .rpc();
+
+        return txSignature;
+    },
+    async startRound(
+        user: anchor.web3.Keypair,
+        index: number,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .startRound()
+            .accounts({
+                user: user.publicKey,
+                round: pda.getRound(index, program),
+                priceAccount: sampleGlobalRoundInfo.priceAccount,
+            })
+            .signers([user])
+            .rpc();
+
+        return txSignature;
+    },
+    async endRound(
+        user: anchor.web3.Keypair,
+        index: number,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .endRound()
+            .accounts({
+                user: user.publicKey,
+                round: pda.getRound(index, program),
+                priceAccount: sampleGlobalRoundInfo.priceAccount,
             })
             .signers([user])
             .rpc();

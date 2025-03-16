@@ -52,8 +52,8 @@ const sampleGlobalRoundInfo: GlobalRoundInfo = {
         streak10: 10000,
     },
     minBetAmount: new anchor.BN(0),
-    priceAccount: new anchor.web3.PublicKey("4cSM2e6rvbGQUFiJbqytoVMi5GgghSMr8LwVrT9VPSPo"),
-    stalenessThreshold: new anchor.BN(600),
+    priceAccount: new anchor.web3.PublicKey("GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU"), // BTC/USD price account on mainnet
+    stalenessThreshold: new anchor.BN(1e9), // Setting to an extremely high value for testing purposes
     jackpotPoolAmount: new anchor.BN(0),
     accumulatedPlatformFees: new anchor.BN(0),
 };

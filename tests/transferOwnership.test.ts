@@ -1,4 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
+import * as spl from "@solana/spl-token";
 import { assert } from "chai";
 import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
@@ -16,7 +17,13 @@ describe("bearish-dot-fun", () => {
     before(async () => {
         ({ owner, user1, user2, stablecoin, bearishDotFun } = await setup());
 
-        await programMethods.initialize(owner, stablecoin, sampleGlobalRoundInfo, bearishDotFun);
+        await programMethods.initialize(
+            owner,
+            stablecoin,
+            sampleGlobalRoundInfo,
+            spl.TOKEN_PROGRAM_ID,
+            bearishDotFun
+        );
     });
 
     it("Allows transferring of ownership", async () => {
