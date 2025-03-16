@@ -80,7 +80,7 @@ impl PlaceBet<'_> {
             }
         }
 
-        user_bet.validate_amount()?;
+        user_bet.validate_amount(platform_config.global_round_info.min_bet_amount)?;
 
         emit!(events::BetPlaced {
             user: ctx.accounts.user.key(),

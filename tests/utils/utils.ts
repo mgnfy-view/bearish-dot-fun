@@ -34,6 +34,29 @@ async function transfer(
     await sendAndConfirmTransaction(provider.connection, transaction, [from]);
 }
 
+async function getStablecoin(
+    provider: anchor.AnchorProvider,
+    stablecoin: anchor.web3.PublicKey,
+    owner: anchor.web3.Keypair,
+    user: anchor.web3.Keypair,
+    amount: number
+) {
+    const userAssociatedTokenAccount = await spl.getOrCreateAssociatedTokenAccount(
+        provider.connection,
+        user,
+        stablecoin,
+        user.publicKey
+    );
+    await spl.mintTo(
+        provider.connection,
+        user,
+        stablecoin,
+        userAssociatedTokenAccount.address,
+        owner,
+        amount
+    );
+}
+
 const pda = {
     getPlatformConfig(program: anchor.Program<BearishDotFun>) {
         return anchor.web3.PublicKey.findProgramAddressSync(
@@ -257,12 +280,17 @@ const programMethods = {
         index: number,
         program: anchor.Program<BearishDotFun>
     ) {
+        const platformConfigAccount = await program.account.platformConfig.fetch(
+            pda.getPlatformConfig(program)
+        );
+        const priceAccount = platformConfigAccount.globalRoundInfo.priceAccount;
+
         const txSignature = await program.methods
             .startRound()
             .accounts({
                 user: user.publicKey,
                 round: pda.getRound(index, program),
-                priceAccount: sampleGlobalRoundInfo.priceAccount,
+                priceAccount: priceAccount,
             })
             .signers([user])
             .rpc();
@@ -274,12 +302,17 @@ const programMethods = {
         index: number,
         program: anchor.Program<BearishDotFun>
     ) {
+        const platformConfigAccount = await program.account.platformConfig.fetch(
+            pda.getPlatformConfig(program)
+        );
+        const priceAccount = platformConfigAccount.globalRoundInfo.priceAccount;
+
         const txSignature = await program.methods
             .endRound()
             .accounts({
                 user: user.publicKey,
                 round: pda.getRound(index, program),
-                priceAccount: sampleGlobalRoundInfo.priceAccount,
+                priceAccount: priceAccount,
             })
             .signers([user])
             .rpc();
@@ -307,4 +340,4 @@ const programMethods = {
     },
 };
 
-export { sleep, createSplTokenMint, transfer, pda, programMethods };
+export { sleep, createSplTokenMint, transfer, getStablecoin, pda, programMethods };

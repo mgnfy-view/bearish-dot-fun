@@ -3,7 +3,7 @@ import * as spl from "@solana/spl-token";
 import { assert } from "chai";
 import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
-import { pda, programMethods, sleep } from "./utils/utils";
+import { getStablecoin, pda, programMethods, sleep } from "./utils/utils";
 import { setup } from "./utils/setup";
 import {
     bumpRangeInclusive,
@@ -34,20 +34,7 @@ describe("bearish-dot-fun", () => {
             bearishDotFun
         );
 
-        const user1AssociatedTokenAccount = await spl.getOrCreateAssociatedTokenAccount(
-            provider.connection,
-            user1,
-            stablecoin,
-            user1.publicKey
-        );
-        await spl.mintTo(
-            provider.connection,
-            user1,
-            stablecoin,
-            user1AssociatedTokenAccount.address,
-            owner,
-            amount
-        );
+        await getStablecoin(provider, stablecoin, owner, user1, amount);
         await programMethods.deposit(
             user1,
             stablecoin,
@@ -57,20 +44,7 @@ describe("bearish-dot-fun", () => {
         );
 
         await programMethods.setAffiliate(user2, owner.publicKey, bearishDotFun);
-        const user2AssociatedTokenAccount = await spl.getOrCreateAssociatedTokenAccount(
-            provider.connection,
-            user2,
-            stablecoin,
-            user2.publicKey
-        );
-        await spl.mintTo(
-            provider.connection,
-            user2,
-            stablecoin,
-            user2AssociatedTokenAccount.address,
-            owner,
-            amount
-        );
+        await getStablecoin(provider, stablecoin, owner, user2, amount);
         await programMethods.deposit(
             user2,
             stablecoin,
@@ -128,7 +102,7 @@ describe("bearish-dot-fun", () => {
         } catch (error) {
             assert.strictEqual(
                 (error as anchor.AnchorError).error.errorMessage,
-                errors.betAmountZero
+                errors.betAmountBelowMinBetAmount
             );
         }
     });
@@ -165,6 +139,18 @@ describe("bearish-dot-fun", () => {
         );
         assert.strictEqual(roundAccount.shortPositions.toNumber(), 1);
         assert.strictEqual(roundAccount.totalBetAmountShort.toNumber(), amount);
+    });
+
+    it("Doesn't allow placing bet for the same round again", async () => {
+        try {
+            await programMethods.placeBet(
+                user2,
+                new anchor.BN(amount),
+                false,
+                roundIndex,
+                bearishDotFun
+            );
+        } catch {}
     });
 
     it("Doesn't allow placing bet for a completed round", async () => {

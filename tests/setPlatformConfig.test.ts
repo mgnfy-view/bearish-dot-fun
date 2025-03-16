@@ -5,7 +5,7 @@ import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
 import { pda, programMethods } from "./utils/utils";
 import { setup } from "./utils/setup";
-import { decimals, errors, sampleGlobalRoundInfo } from "./utils/constants";
+import { decimals, errors, priceAccounts, sampleGlobalRoundInfo } from "./utils/constants";
 import { Allocation, JackPotAllocation } from "./utils/types";
 
 describe("bearish-dot-fun", () => {
@@ -161,9 +161,7 @@ describe("bearish-dot-fun", () => {
     });
 
     it("Allows setting price account", async () => {
-        const newPriceAccount = new anchor.web3.PublicKey(
-            "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
-        ); // SOL/USD price account on mainnet
+        const newPriceAccount = priceAccounts.btcUsd;
 
         await programMethods.setPriceAccount(owner, newPriceAccount, bearishDotFun);
 

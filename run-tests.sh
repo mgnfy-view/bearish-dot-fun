@@ -25,5 +25,11 @@ sleep 1s
 anchor test tests/startRound.test.ts --skip-build
 sleep 1s
 
-anchor test tests/endRound.test.ts --skip-build
+anchor test tests/placeBet.test.ts --skip-build
+sleep 1s
+
+anchor test tests/endRoundPart1.test.ts --skip-build
+sleep 1s
+
+anchor test tests/endRoundPart2.test.ts --skip-build
 sleep 1s

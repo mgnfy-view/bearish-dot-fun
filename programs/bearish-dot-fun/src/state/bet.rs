@@ -15,8 +15,11 @@ pub struct Bet {
 }
 
 impl Bet {
-    pub fn validate_amount(&self) -> Result<()> {
-        require!(self.amount > 0, error::ErrorCodes::BetAmountZero);
+    pub fn validate_amount(&self, min_bet_amount: u64) -> Result<()> {
+        require!(
+            self.amount > min_bet_amount,
+            error::ErrorCodes::BetAmountBelowMinBetAmount
+        );
 
         Ok(())
     }

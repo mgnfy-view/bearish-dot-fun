@@ -5,12 +5,7 @@ import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
 import { pda, programMethods, sleep } from "./utils/utils";
 import { setup } from "./utils/setup";
-import {
-    bumpRangeInclusive,
-    errors,
-    sampleGlobalRoundInfo,
-    millisecondsPerSecond,
-} from "./utils/constants";
+import { errors, sampleGlobalRoundInfo, millisecondsPerSecond } from "./utils/constants";
 
 describe("bearish-dot-fun", () => {
     let owner: anchor.web3.Keypair,
@@ -33,7 +28,7 @@ describe("bearish-dot-fun", () => {
         await programMethods.startRound(user1, roundIndex, bearishDotFun);
     });
 
-    it("Doesn't allow anyone to end a round before the round duration", async () => {
+    it("Doesn't allow anyone to end a round before the round duration ends", async () => {
         try {
             await programMethods.endRound(user1, roundIndex, bearishDotFun);
         } catch (error) {
@@ -59,6 +54,15 @@ describe("bearish-dot-fun", () => {
         assert.strictEqual(roundAccount.affiliatesForShortPositions.toNumber(), 0);
         assert.strictEqual(roundAccount.totalBetAmountLong.toNumber(), 0);
         assert.strictEqual(roundAccount.totalBetAmountShort.toNumber(), 0);
+
+        const platformConfigAccount = await bearishDotFun.account.platformConfig.fetch(
+            pda.getPlatformConfig(bearishDotFun)
+        );
+        assert.strictEqual(
+            platformConfigAccount.globalRoundInfo.accumulatedPlatformFees.toNumber(),
+            0
+        );
+        assert.strictEqual(platformConfigAccount.globalRoundInfo.jackpotPoolAmount.toNumber(), 0);
     });
 
     it("Doesn't allow ending the same round again", async () => {

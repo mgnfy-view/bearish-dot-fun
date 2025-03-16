@@ -26,8 +26,8 @@ pub enum ErrorCodes {
     RoundAlreadyStarted,
     #[msg("Round already ended.")]
     RoundAlreadyEnded,
-    #[msg("Bet amount cannot be 0.")]
-    BetAmountZero,
+    #[msg("Bet amount cannot be less than the minimum bet amount.")]
+    BetAmountBelowMinBetAmount,
     #[msg("Already claimed winnings.")]
     AlreadyClaimedWinnings,
     #[msg("Ineligible for claim.")]
