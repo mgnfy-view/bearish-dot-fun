@@ -3,7 +3,7 @@ import * as spl from "@solana/spl-token";
 import { Connection, sendAndConfirmTransaction, SystemProgram, Transaction } from "@solana/web3.js";
 import { BearishDotFun } from "../../target/types/bearish_dot_fun";
 
-import { GlobalRoundInfo } from "./types";
+import { Allocation, GlobalRoundInfo, JackPotAllocation } from "./types";
 import { seeds } from "./constants";
 
 async function createSplTokenMint(
@@ -82,6 +82,96 @@ const programMethods = {
                 newOwner: newOwner.publicKey,
             })
             .signers([owner, newOwner])
+            .rpc();
+
+        return txSignature;
+    },
+    async setDuration(
+        owner: anchor.web3.Keypair,
+        duration: anchor.BN,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .setDuration(duration)
+            .accounts({
+                owner: owner.publicKey,
+            })
+            .signers([owner])
+            .rpc();
+
+        return txSignature;
+    },
+    async setAllocation(
+        owner: anchor.web3.Keypair,
+        allocation: Allocation,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .setAllocation(allocation)
+            .accounts({
+                owner: owner.publicKey,
+            })
+            .signers([owner])
+            .rpc();
+
+        return txSignature;
+    },
+    async setJackPotAllocation(
+        owner: anchor.web3.Keypair,
+        jackpotAllocation: JackPotAllocation,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .setJackpotAllocation(jackpotAllocation)
+            .accounts({
+                owner: owner.publicKey,
+            })
+            .signers([owner])
+            .rpc();
+
+        return txSignature;
+    },
+    async setMinBetAmount(
+        owner: anchor.web3.Keypair,
+        minBetAmount: anchor.BN,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .setMinBetAmount(minBetAmount)
+            .accounts({
+                owner: owner.publicKey,
+            })
+            .signers([owner])
+            .rpc();
+
+        return txSignature;
+    },
+    async setPriceAccount(
+        owner: anchor.web3.Keypair,
+        priceAccount: anchor.web3.PublicKey,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .setPriceAccount(priceAccount)
+            .accounts({
+                owner: owner.publicKey,
+            })
+            .signers([owner])
+            .rpc();
+
+        return txSignature;
+    },
+    async setStalenessThreshold(
+        owner: anchor.web3.Keypair,
+        stalenessThreshold: anchor.BN,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .setStalenessThreshold(stalenessThreshold)
+            .accounts({
+                owner: owner.publicKey,
+            })
+            .signers([owner])
             .rpc();
 
         return txSignature;

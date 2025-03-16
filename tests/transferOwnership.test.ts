@@ -25,7 +25,7 @@ describe("bearish-dot-fun", () => {
         const platformConfigAccount = await bearishDotFun.account.platformConfig.fetch(
             pda.getPlatformConfig(bearishDotFun)
         );
-        assert.equal(platformConfigAccount.owner.toString(), user1.publicKey.toString());
+        assert.deepStrictEqual(platformConfigAccount.owner, user1.publicKey);
     });
 
     it("Doesn't allow ownership transfer if caller is not owner", async () => {

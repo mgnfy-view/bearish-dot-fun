@@ -36,7 +36,7 @@ const errors = {
 
 const sampleGlobalRoundInfo: GlobalRoundInfo = {
     round: new anchor.BN(0),
-    duration: new anchor.BN(10),
+    duration: new anchor.BN(5),
     allocation: {
         winnersShare: 4500,
         affiliateShare: 500,

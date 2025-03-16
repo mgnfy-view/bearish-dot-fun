@@ -21,73 +21,41 @@ describe("bearish-dot-fun", () => {
         const platformConfigAccount = await bearishDotFun.account.platformConfig.fetch(
             pda.getPlatformConfig(bearishDotFun)
         );
-        assert.equal(platformConfigAccount.owner.toString(), owner.publicKey.toString());
-        assert.equal(platformConfigAccount.stablecoin.toString(), stablecoin.toString());
-        assert.equal(
+        assert.deepStrictEqual(platformConfigAccount.owner, owner.publicKey);
+        assert.deepStrictEqual(platformConfigAccount.stablecoin, stablecoin);
+        assert.strictEqual(
             platformConfigAccount.globalRoundInfo.round.toNumber(),
             sampleGlobalRoundInfo.round.toNumber()
         );
-        assert.equal(
+        assert.strictEqual(
             platformConfigAccount.globalRoundInfo.duration.toNumber(),
             sampleGlobalRoundInfo.duration.toNumber()
         );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.allocation.winnersShare,
-            sampleGlobalRoundInfo.allocation.winnersShare
+        assert.deepEqual(
+            platformConfigAccount.globalRoundInfo.allocation,
+            sampleGlobalRoundInfo.allocation
         );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.allocation.affiliateShare,
-            sampleGlobalRoundInfo.allocation.affiliateShare
+        assert.deepEqual(
+            platformConfigAccount.globalRoundInfo.jackpotAllocation,
+            sampleGlobalRoundInfo.jackpotAllocation
         );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.allocation.jackpotShare,
-            sampleGlobalRoundInfo.allocation.jackpotShare
-        );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.allocation.platformShare,
-            sampleGlobalRoundInfo.allocation.platformShare
-        );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.jackpotAllocation.streak5,
-            sampleGlobalRoundInfo.jackpotAllocation.streak5
-        );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.jackpotAllocation.streak6,
-            sampleGlobalRoundInfo.jackpotAllocation.streak6
-        );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.jackpotAllocation.streak7,
-            sampleGlobalRoundInfo.jackpotAllocation.streak7
-        );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.jackpotAllocation.streak8,
-            sampleGlobalRoundInfo.jackpotAllocation.streak8
-        );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.jackpotAllocation.streak9,
-            sampleGlobalRoundInfo.jackpotAllocation.streak9
-        );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.jackpotAllocation.streak10,
-            sampleGlobalRoundInfo.jackpotAllocation.streak10
-        );
-        assert.equal(
+        assert.strictEqual(
             platformConfigAccount.globalRoundInfo.minBetAmount.toNumber(),
             sampleGlobalRoundInfo.minBetAmount.toNumber()
         );
-        assert.equal(
-            platformConfigAccount.globalRoundInfo.priceAccount.toString(),
-            sampleGlobalRoundInfo.priceAccount.toString()
+        assert.deepStrictEqual(
+            platformConfigAccount.globalRoundInfo.priceAccount,
+            sampleGlobalRoundInfo.priceAccount
         );
-        assert.equal(
+        assert.strictEqual(
             platformConfigAccount.globalRoundInfo.stalenessThreshold.toNumber(),
             sampleGlobalRoundInfo.stalenessThreshold.toNumber()
         );
-        assert.equal(
+        assert.strictEqual(
             platformConfigAccount.globalRoundInfo.jackpotPoolAmount.toNumber(),
             sampleGlobalRoundInfo.jackpotPoolAmount.toNumber()
         );
-        assert.equal(
+        assert.strictEqual(
             platformConfigAccount.globalRoundInfo.accumulatedPlatformFees.toNumber(),
             sampleGlobalRoundInfo.accumulatedPlatformFees.toNumber()
         );

@@ -10,6 +10,9 @@ sleep 2s
 anchor test tests/transferOwnership.test.ts --skip-build
 sleep 2s
 
+anchor test tests/setPlatformConfig.test.ts --skip-build
+sleep 2s
+
 anchor test tests/setAffiliate.test.ts --skip-build
 sleep 2s
 

@@ -25,11 +25,11 @@ describe("bearish-dot-fun", () => {
         const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
             pda.getUserInfo(user1.publicKey, bearishDotFun)
         );
-        assert.equal(userInfoAccount.amount.toNumber(), 0);
-        assert.equal(userInfoAccount.affiliate.toString(), user2.publicKey.toString());
-        assert.equal(userInfoAccount.lastWonRound.toNumber(), 0);
-        assert.equal(userInfoAccount.timesWon.toNumber(), 0);
-        assert.equal(userInfoAccount.amount.toNumber(), 0);
+        assert.strictEqual(userInfoAccount.amount.toNumber(), 0);
+        assert.deepStrictEqual(userInfoAccount.affiliate, user2.publicKey);
+        assert.strictEqual(userInfoAccount.lastWonRound.toNumber(), 0);
+        assert.strictEqual(userInfoAccount.timesWon.toNumber(), 0);
+        assert.strictEqual(userInfoAccount.amount.toNumber(), 0);
         assert(
             userInfoAccount.bump >= bumpRangeInclusive[0] &&
                 userInfoAccount.bump <= bumpRangeInclusive[1]
@@ -43,7 +43,7 @@ describe("bearish-dot-fun", () => {
         const userAccount = await bearishDotFun.account.userInfo.fetch(
             pda.getUserInfo(user1.publicKey, bearishDotFun)
         );
-        assert.equal(userAccount.affiliate.toString(), newAffiliate.toString());
+        assert.deepStrictEqual(userAccount.affiliate, newAffiliate);
     });
 
     it("Allows a user to remove an affiliate by setting default pubkey as their affiliate", async () => {
@@ -52,17 +52,17 @@ describe("bearish-dot-fun", () => {
         const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
             pda.getUserInfo(user1.publicKey, bearishDotFun)
         );
-        assert.equal(
-            userInfoAccount.affiliate.toString(),
-            anchor.web3.PublicKey.default.toString()
-        );
+        assert.deepStrictEqual(userInfoAccount.affiliate, anchor.web3.PublicKey.default);
     });
 
     it("Doesn't allow a user to set themselves as affiliate", async () => {
         try {
             await programMethods.setAffiliate(user1, user1.publicKey, bearishDotFun);
         } catch (error) {
-            assert.equal((error as anchor.AnchorError).error.errorMessage, errors.invalidAffiliate);
+            assert.strictEqual(
+                (error as anchor.AnchorError).error.errorMessage,
+                errors.invalidAffiliate
+            );
         }
     });
 });
