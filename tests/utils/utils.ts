@@ -6,6 +6,10 @@ import { BearishDotFun } from "../../target/types/bearish_dot_fun";
 import { Allocation, GlobalRoundInfo, JackPotAllocation } from "./types";
 import { sampleGlobalRoundInfo, seeds } from "./constants";
 
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function createSplTokenMint(
     connection: Connection,
     owner: anchor.web3.Keypair,
@@ -274,4 +278,4 @@ const programMethods = {
     },
 };
 
-export { createSplTokenMint, transfer, pda, programMethods };
+export { sleep, createSplTokenMint, transfer, pda, programMethods };

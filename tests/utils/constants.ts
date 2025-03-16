@@ -4,6 +4,7 @@ import { GlobalRoundInfo } from "./types";
 
 const decimals = 9;
 const bumpRangeInclusive = [1, 255];
+const millisecondsPerSecond = 1000;
 
 const seeds = {
     platformConfig: "platform_config",
@@ -58,4 +59,11 @@ const sampleGlobalRoundInfo: GlobalRoundInfo = {
     accumulatedPlatformFees: new anchor.BN(0),
 };
 
-export { decimals, bumpRangeInclusive, seeds, errors, sampleGlobalRoundInfo };
+export {
+    decimals,
+    bumpRangeInclusive,
+    seeds,
+    errors,
+    sampleGlobalRoundInfo,
+    millisecondsPerSecond,
+};
