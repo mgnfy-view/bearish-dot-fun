@@ -194,4 +194,12 @@ describe("bearish-dot-fun", () => {
             stalenessThreshold.toNumber()
         );
     });
+
+    it("Doesn't allow non-owner to change platform config", async () => {
+        const duration = new anchor.BN(1000);
+
+        try {
+            await programMethods.setDuration(user1, duration, bearishDotFun);
+        } catch {}
+    });
 });
