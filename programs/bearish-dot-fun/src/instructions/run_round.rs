@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Mint, TokenInterface};
 
 use crate::{constants, error, events, utils, PlatformConfig, Round};
 
@@ -14,9 +13,6 @@ pub struct RunRound<'info> {
         bump = platform_config.bump,
     )]
     pub platform_config: Account<'info, PlatformConfig>,
-
-    #[account(address = platform_config.stablecoin)]
-    pub stablecoin: InterfaceAccount<'info, Mint>,
 
     #[account(
         init_if_needed,
@@ -35,7 +31,6 @@ pub struct RunRound<'info> {
     pub price_account: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Interface<'info, TokenInterface>,
 }
 
 impl RunRound<'_> {
@@ -85,59 +80,80 @@ impl RunRound<'_> {
         round.ending_price = price;
         global_round_info.round += 1;
 
-        let have_longs_won =
-            utils::math::is_greater_than(&round.ending_price, &round.starting_price);
-        if have_longs_won {
+        if round.ending_price == round.starting_price {
             global_round_info.jackpot_pool_amount += u64::try_from(utils::math::mul_div_down(
-                &(round.total_bet_amount_short as u128),
-                &(global_round_info.allocation.jackpot_share as u128),
+                &((round.total_bet_amount_long + round.total_bet_amount_short) as u128),
+                &((global_round_info.allocation.jackpot_share
+                    + global_round_info.allocation.winners_share
+                    + global_round_info.allocation.affiliate_share) as u128),
                 &(constants::general::BPS as u128),
             ))
             .unwrap();
 
             global_round_info.accumulated_platform_fees +=
                 u64::try_from(utils::math::mul_div_down(
-                    &(round.total_bet_amount_short as u128),
+                    &((round.total_bet_amount_long + round.total_bet_amount_short) as u128),
                     &(global_round_info.allocation.platform_share as u128),
                     &(constants::general::BPS as u128),
                 ))
                 .unwrap();
-
-            if round.total_bet_amount_long == 0 {
-                global_round_info.jackpot_pool_amount += u64::try_from(utils::math::mul_div_down(
-                    &(round.total_bet_amount_short as u128),
-                    &((global_round_info.allocation.winners_share
-                        + global_round_info.allocation.affiliate_share)
-                        as u128),
-                    &(constants::general::BPS as u128),
-                ))
-                .unwrap();
-            }
         } else {
-            global_round_info.jackpot_pool_amount += u64::try_from(utils::math::mul_div_down(
-                &(round.total_bet_amount_long as u128),
-                &(global_round_info.allocation.jackpot_share as u128),
-                &(constants::general::BPS as u128),
-            ))
-            .unwrap();
-
-            global_round_info.accumulated_platform_fees +=
-                u64::try_from(utils::math::mul_div_down(
-                    &(round.total_bet_amount_long as u128),
-                    &(global_round_info.allocation.platform_share as u128),
+            let have_longs_won =
+                utils::math::is_greater_than(&round.ending_price, &round.starting_price);
+            if have_longs_won {
+                global_round_info.jackpot_pool_amount += u64::try_from(utils::math::mul_div_down(
+                    &(round.total_bet_amount_short as u128),
+                    &(global_round_info.allocation.jackpot_share as u128),
                     &(constants::general::BPS as u128),
                 ))
                 .unwrap();
 
-            if round.total_bet_amount_short == 0 {
+                global_round_info.accumulated_platform_fees +=
+                    u64::try_from(utils::math::mul_div_down(
+                        &(round.total_bet_amount_short as u128),
+                        &(global_round_info.allocation.platform_share as u128),
+                        &(constants::general::BPS as u128),
+                    ))
+                    .unwrap();
+
+                if round.total_bet_amount_long == 0 {
+                    global_round_info.jackpot_pool_amount +=
+                        u64::try_from(utils::math::mul_div_down(
+                            &(round.total_bet_amount_short as u128),
+                            &((global_round_info.allocation.winners_share
+                                + global_round_info.allocation.affiliate_share)
+                                as u128),
+                            &(constants::general::BPS as u128),
+                        ))
+                        .unwrap();
+                }
+            } else {
                 global_round_info.jackpot_pool_amount += u64::try_from(utils::math::mul_div_down(
                     &(round.total_bet_amount_long as u128),
-                    &((global_round_info.allocation.winners_share
-                        + global_round_info.allocation.affiliate_share)
-                        as u128),
+                    &(global_round_info.allocation.jackpot_share as u128),
                     &(constants::general::BPS as u128),
                 ))
                 .unwrap();
+
+                global_round_info.accumulated_platform_fees +=
+                    u64::try_from(utils::math::mul_div_down(
+                        &(round.total_bet_amount_long as u128),
+                        &(global_round_info.allocation.platform_share as u128),
+                        &(constants::general::BPS as u128),
+                    ))
+                    .unwrap();
+
+                if round.total_bet_amount_short == 0 {
+                    global_round_info.jackpot_pool_amount +=
+                        u64::try_from(utils::math::mul_div_down(
+                            &(round.total_bet_amount_long as u128),
+                            &((global_round_info.allocation.winners_share
+                                + global_round_info.allocation.affiliate_share)
+                                as u128),
+                            &(constants::general::BPS as u128),
+                        ))
+                        .unwrap();
+                }
             }
         }
 

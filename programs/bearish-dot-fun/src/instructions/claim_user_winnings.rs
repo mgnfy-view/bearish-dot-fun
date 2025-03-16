@@ -92,7 +92,8 @@ impl ClaimUserWinnings<'_> {
         let have_longs_won =
             utils::math::is_greater_than(&round.ending_price, &round.starting_price);
         require!(
-            (have_longs_won && user_bet.is_long) || (!have_longs_won && !user_bet.is_long),
+            round.ending_price != round.starting_price
+                && ((have_longs_won && user_bet.is_long) || (!have_longs_won && !user_bet.is_long)),
             error::ErrorCodes::IneligibleForClaim
         );
 
@@ -127,6 +128,7 @@ impl ClaimUserWinnings<'_> {
             ))
             .unwrap();
         }
+        user_info.amount += user_bet.amount;
 
         user_info.times_won += 1;
         let streak_winnings_share = match user_info.times_won {

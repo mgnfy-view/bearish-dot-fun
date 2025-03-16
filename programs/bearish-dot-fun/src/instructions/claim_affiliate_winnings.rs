@@ -86,7 +86,8 @@ impl ClaimAffiliateWinnings<'_> {
         let have_longs_won =
             utils::math::is_greater_than(&round.ending_price, &round.starting_price);
         require!(
-            (have_longs_won && user_bet.is_long) || (!have_longs_won && !user_bet.is_long),
+            round.ending_price != round.starting_price
+                && ((have_longs_won && user_bet.is_long) || (!have_longs_won && !user_bet.is_long)),
             error::ErrorCodes::IneligibleForClaim
         );
 
