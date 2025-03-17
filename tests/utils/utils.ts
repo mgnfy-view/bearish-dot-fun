@@ -375,6 +375,41 @@ const programMethods = {
 
         return txSignature;
     },
+    async claimAffiliateWinnings(
+        affiliate: anchor.web3.Keypair,
+        user: anchor.web3.PublicKey,
+        roundIndex: number,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const provider = program.provider;
+        const stablecoin = (
+            await program.account.platformConfig.fetch(pda.getPlatformConfig(program))
+        ).stablecoin;
+        const tokenProgramId = (await provider.connection.getAccountInfo(stablecoin)).owner;
+
+        const txSignature = await program.methods
+            .claimAffiliateWinnings(new anchor.BN(roundIndex))
+            .accounts({
+                user: user,
+                affiliate: affiliate.publicKey,
+                stablecoin,
+                round: pda.getRound(roundIndex + 1, program),
+                userBet: pda.getUserBet(user, roundIndex + 1, program),
+                affiliateTokenAccount: (
+                    await spl.getOrCreateAssociatedTokenAccount(
+                        provider.connection,
+                        affiliate,
+                        stablecoin,
+                        affiliate.publicKey
+                    )
+                ).address,
+                tokenProgram: tokenProgramId,
+            })
+            .signers([affiliate])
+            .rpc();
+
+        return txSignature;
+    },
 };
 
 export { sleep, transferSOL, createSplTokenMint, getStablecoin, pda, programMethods };

@@ -20,7 +20,6 @@ export async function setup() {
     const stablecoin = await createSplTokenMint(provider.connection, owner, decimals);
 
     const amount = 1000 * 10 ** decimals;
-    await getStablecoin(provider, stablecoin, owner, owner, amount);
     await getStablecoin(provider, stablecoin, owner, user1, amount);
     await getStablecoin(provider, stablecoin, owner, user2, amount);
 

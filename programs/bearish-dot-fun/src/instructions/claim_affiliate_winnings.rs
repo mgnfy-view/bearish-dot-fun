@@ -36,7 +36,7 @@ pub struct ClaimAffiliateWinnings<'info> {
     #[account(
         seeds = [
             constants::seeds::ROUND,
-            &round_index.to_be_bytes()
+            (round_index + 1).to_be_bytes().as_ref()
         ],
         bump = round.bump,
     )]
@@ -46,7 +46,8 @@ pub struct ClaimAffiliateWinnings<'info> {
         mut,
         seeds = [
             constants::seeds::USER_BET,
-            user.key().as_ref()
+            user.key().as_ref(),
+            (round_index + 1).to_be_bytes().as_ref()
         ],
         bump = user_bet.bump,
     )]

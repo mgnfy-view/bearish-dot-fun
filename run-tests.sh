@@ -48,3 +48,6 @@ sleep 1s
 
 anchor test tests/claimUserWinnings3.test.ts --skip-build
 sleep 1s
+
+anchor test tests/claimAffiliateWinnings.test.ts --skip-build
+sleep 1s
