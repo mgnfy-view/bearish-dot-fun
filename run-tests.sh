@@ -33,3 +33,6 @@ sleep 1s
 
 anchor test tests/endRoundPart2.test.ts --skip-build
 sleep 1s
+
+anchor test tests/endRoundPart3.test.ts --skip-build
+sleep 1s
