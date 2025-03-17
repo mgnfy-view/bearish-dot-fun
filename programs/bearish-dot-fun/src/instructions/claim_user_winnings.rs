@@ -1,7 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{
-    transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked,
-};
 
 use crate::{constants, error, events, utils, Bet, PlatformConfig, Round, UserInfo};
 
@@ -18,18 +15,6 @@ pub struct ClaimUserWinnings<'info> {
     )]
     pub platform_config: Account<'info, PlatformConfig>,
 
-    #[account(address = platform_config.stablecoin)]
-    pub stablecoin: InterfaceAccount<'info, Mint>,
-
-    #[account(
-        mut,
-        seeds = [constants::seeds::PLATFORM_VAULT],
-        bump = platform_config.platform_vault_bump,
-        token::mint = stablecoin,
-        token::authority = platform_vault
-    )]
-    pub platform_vault: InterfaceAccount<'info, TokenAccount>,
-
     #[account(
         mut,
         seeds = [
@@ -43,7 +28,7 @@ pub struct ClaimUserWinnings<'info> {
     #[account(
         seeds = [
             constants::seeds::ROUND,
-            &round_index.to_be_bytes()
+            (round_index + 1).to_be_bytes().as_ref(),
         ],
         bump = round.bump,
     )]
@@ -54,28 +39,18 @@ pub struct ClaimUserWinnings<'info> {
         seeds = [
             constants::seeds::USER_BET,
             user.key().as_ref(),
-            &round_index.to_be_bytes(),
+            (round_index + 1).to_be_bytes().as_ref(),
         ],
         bump = user_bet.bump,
     )]
     pub user_bet: Account<'info, Bet>,
 
-    #[account(
-        mut,
-        token::mint = stablecoin,
-        token::authority = user,
-    )]
-    pub user_token_account: InterfaceAccount<'info, TokenAccount>,
-
     pub system_program: Program<'info, System>,
-    pub token_program: Interface<'info, TokenInterface>,
 }
 
 impl ClaimUserWinnings<'_> {
     pub fn claim_user_winnings(ctx: Context<ClaimUserWinnings>, round_index: u64) -> Result<()> {
         let global_round_info = &mut ctx.accounts.platform_config.global_round_info;
-        let platform_vault = &mut ctx.accounts.platform_vault;
-        let stablecoin = &ctx.accounts.stablecoin;
         let user_info = &mut ctx.accounts.user_info;
         let round = &ctx.accounts.round;
         let user_bet = &mut ctx.accounts.user_bet;
@@ -128,7 +103,6 @@ impl ClaimUserWinnings<'_> {
             ))
             .unwrap();
         }
-        user_info.amount += user_bet.amount;
 
         user_info.times_won += 1;
         let streak_winnings_share = match user_info.times_won {
@@ -158,28 +132,11 @@ impl ClaimUserWinnings<'_> {
                 user_info.times_won = 0;
             }
         }
-        user_info.last_won_round = round_index;
-
-        if amount > 0 {
-            let platform_vault_bump = &[ctx.accounts.platform_config.platform_vault_bump];
-            let platform_vault_signer =
-                &[&[constants::seeds::PLATFORM_VAULT, platform_vault_bump][..]];
-
-            transfer_checked(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    TransferChecked {
-                        from: platform_vault.to_account_info(),
-                        mint: stablecoin.to_account_info(),
-                        to: ctx.accounts.user_token_account.to_account_info(),
-                        authority: platform_vault.to_account_info(),
-                    },
-                    platform_vault_signer,
-                ),
-                amount,
-                stablecoin.decimals,
-            )?;
+        if round_index != user_info.last_won_round + 1 {
+            user_info.times_won = 1;
         }
+        user_info.last_won_round = round_index;
+        user_info.amount += user_bet.amount + amount;
 
         emit!(events::WinningsClaimed {
             user: ctx.accounts.user.key(),

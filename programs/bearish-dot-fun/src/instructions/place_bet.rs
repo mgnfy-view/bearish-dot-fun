@@ -27,7 +27,7 @@ pub struct PlaceBet<'info> {
         mut,
         seeds = [
             constants::seeds::ROUND,
-            &(platform_config.global_round_info.round + 1).to_be_bytes()
+            (platform_config.global_round_info.round + 1).to_be_bytes().as_ref()
         ],
         bump = round.bump,
     )]
@@ -40,7 +40,7 @@ pub struct PlaceBet<'info> {
         seeds = [
             constants::seeds::USER_BET,
             user.key().as_ref(),
-            &(platform_config.global_round_info.round + 1).to_be_bytes()
+            (platform_config.global_round_info.round + 1).to_be_bytes().as_ref()
         ],
         bump,
     )]

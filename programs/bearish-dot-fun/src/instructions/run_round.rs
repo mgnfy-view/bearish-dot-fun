@@ -20,7 +20,7 @@ pub struct RunRound<'info> {
         space = constants::general::ANCHOR_DISCRIMINATOR_SIZE + Round::INIT_SPACE,
         seeds = [
             constants::seeds::ROUND,
-            &(platform_config.global_round_info.round + 1).to_be_bytes()
+            (platform_config.global_round_info.round + 1).to_be_bytes().as_ref()
         ],
         bump,
     )]

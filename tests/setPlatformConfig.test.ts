@@ -20,8 +20,8 @@ describe("bearish-dot-fun", () => {
         await programMethods.initialize(
             owner,
             stablecoin,
-            sampleGlobalRoundInfo,
             spl.TOKEN_PROGRAM_ID,
+            sampleGlobalRoundInfo,
             bearishDotFun
         );
     });

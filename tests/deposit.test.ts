@@ -21,40 +21,28 @@ describe("bearish-dot-fun", () => {
         await programMethods.initialize(
             owner,
             stablecoin,
-            sampleGlobalRoundInfo,
             spl.TOKEN_PROGRAM_ID,
+            sampleGlobalRoundInfo,
             bearishDotFun
         );
     });
 
     it("Allows a user to deposit tokens", async () => {
-        const user1AssociatedTokenAccount = await spl.getOrCreateAssociatedTokenAccount(
-            provider.connection,
-            user1,
+        const user1AssociatedTokenAccountAddress = await spl.getAssociatedTokenAddress(
             stablecoin,
             user1.publicKey
         );
-        await spl.mintTo(
-            provider.connection,
-            user1,
-            stablecoin,
-            user1AssociatedTokenAccount.address,
-            owner,
-            amount
-        );
 
-        await programMethods.deposit(
-            user1,
-            stablecoin,
-            new anchor.BN(amount),
-            spl.TOKEN_PROGRAM_ID,
-            bearishDotFun
-        );
+        const user1BalanceBefore = (
+            await spl.getAccount(provider.connection, user1AssociatedTokenAccountAddress)
+        ).amount;
+
+        await programMethods.deposit(user1, new anchor.BN(amount), bearishDotFun);
 
         const user1BalanceAfter = (
-            await spl.getAccount(provider.connection, user1AssociatedTokenAccount.address)
+            await spl.getAccount(provider.connection, user1AssociatedTokenAccountAddress)
         ).amount;
-        assert.strictEqual(Number(user1BalanceAfter), 0);
+        assert.strictEqual(Number(user1BalanceBefore) - Number(user1BalanceAfter), amount);
 
         const platformVaultBalanceAfter = (
             await spl.getAccount(provider.connection, pda.getPlatformVault(bearishDotFun))
@@ -75,33 +63,21 @@ describe("bearish-dot-fun", () => {
     });
 
     it("Allows a user to deposit tokens multiple times", async () => {
-        const user1AssociatedTokenAccount = await spl.getOrCreateAssociatedTokenAccount(
-            provider.connection,
-            user1,
+        const user1AssociatedTokenAccountAddress = await spl.getAssociatedTokenAddress(
             stablecoin,
             user1.publicKey
         );
-        await spl.mintTo(
-            provider.connection,
-            user1,
-            stablecoin,
-            user1AssociatedTokenAccount.address,
-            owner,
-            amount
-        );
 
-        await programMethods.deposit(
-            user1,
-            stablecoin,
-            new anchor.BN(amount),
-            spl.TOKEN_PROGRAM_ID,
-            bearishDotFun
-        );
+        const user1BalanceBefore = (
+            await spl.getAccount(provider.connection, user1AssociatedTokenAccountAddress)
+        ).amount;
+
+        await programMethods.deposit(user1, new anchor.BN(amount), bearishDotFun);
 
         const user1BalanceAfter = (
-            await spl.getAccount(provider.connection, user1AssociatedTokenAccount.address)
+            await spl.getAccount(provider.connection, user1AssociatedTokenAccountAddress)
         ).amount;
-        assert.strictEqual(Number(user1BalanceAfter), 0);
+        assert.strictEqual(Number(user1BalanceBefore) - Number(user1BalanceAfter), amount);
 
         const platformVaultBalanceAfter = (
             await spl.getAccount(provider.connection, pda.getPlatformVault(bearishDotFun))
@@ -122,13 +98,7 @@ describe("bearish-dot-fun", () => {
         const amount = 0;
 
         try {
-            await programMethods.deposit(
-                user1,
-                stablecoin,
-                new anchor.BN(amount),
-                spl.TOKEN_PROGRAM_ID,
-                bearishDotFun
-            );
+            await programMethods.deposit(user1, new anchor.BN(amount), bearishDotFun);
         } catch (error) {
             assert.strictEqual(
                 (error as anchor.AnchorError).error.errorMessage,

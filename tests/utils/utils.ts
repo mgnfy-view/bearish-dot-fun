@@ -4,21 +4,13 @@ import { Connection, sendAndConfirmTransaction, SystemProgram, Transaction } fro
 import { BearishDotFun } from "../../target/types/bearish_dot_fun";
 
 import { Allocation, GlobalRoundInfo, JackPotAllocation } from "./types";
-import { sampleGlobalRoundInfo, seeds } from "./constants";
+import { seeds } from "./constants";
 
 function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function createSplTokenMint(
-    connection: Connection,
-    owner: anchor.web3.Keypair,
-    decimals: number
-) {
-    return await spl.createMint(connection, owner, owner.publicKey, owner.publicKey, decimals);
-}
-
-async function transfer(
+async function transferSOL(
     provider: anchor.AnchorProvider,
     from: anchor.web3.Keypair,
     to: anchor.web3.PublicKey,
@@ -32,6 +24,14 @@ async function transfer(
         })
     );
     await sendAndConfirmTransaction(provider.connection, transaction, [from]);
+}
+
+async function createSplTokenMint(
+    connection: Connection,
+    owner: anchor.web3.Keypair,
+    decimals: number
+) {
+    return await spl.createMint(connection, owner, owner.publicKey, owner.publicKey, decimals);
 }
 
 async function getStablecoin(
@@ -76,18 +76,22 @@ const pda = {
             program.programId
         )[0];
     },
-    getRound(index: number, program: anchor.Program<BearishDotFun>) {
+    getRound(roundIndex: number, program: anchor.Program<BearishDotFun>) {
         return anchor.web3.PublicKey.findProgramAddressSync(
-            [Buffer.from(seeds.round), new anchor.BN(index).toArrayLike(Buffer, "be", 8)],
+            [Buffer.from(seeds.round), new anchor.BN(roundIndex).toArrayLike(Buffer, "be", 8)],
             program.programId
         )[0];
     },
-    getUserBet(user: anchor.web3.PublicKey, index: number, program: anchor.Program<BearishDotFun>) {
+    getUserBet(
+        user: anchor.web3.PublicKey,
+        roundIndex: number,
+        program: anchor.Program<BearishDotFun>
+    ) {
         return anchor.web3.PublicKey.findProgramAddressSync(
             [
                 Buffer.from(seeds.userBet),
                 user.toBuffer(),
-                new anchor.BN(index).toArrayLike(Buffer, "be", 8),
+                new anchor.BN(roundIndex).toArrayLike(Buffer, "be", 8),
             ],
             program.programId
         )[0];
@@ -98,8 +102,8 @@ const programMethods = {
     async initialize(
         owner: anchor.web3.Keypair,
         stablecoin: anchor.web3.PublicKey,
-        globalRoundInfo: GlobalRoundInfo,
         tokenProgramId: anchor.web3.PublicKey,
+        globalRoundInfo: GlobalRoundInfo,
         program: anchor.Program<BearishDotFun>
     ) {
         const txSignature = await program.methods
@@ -237,17 +241,26 @@ const programMethods = {
     },
     async deposit(
         user: anchor.web3.Keypair,
-        stablecoin: anchor.web3.PublicKey,
         amount: anchor.BN,
-        tokenProgramId: anchor.web3.PublicKey,
         program: anchor.Program<BearishDotFun>
     ) {
+        const provider = program.provider;
+        const stablecoin = (
+            await program.account.platformConfig.fetch(pda.getPlatformConfig(program))
+        ).stablecoin;
+        const tokenProgramId = (await provider.connection.getAccountInfo(stablecoin)).owner;
+
         const txSignature = await program.methods
             .deposit(amount)
             .accounts({
                 user: user.publicKey,
                 stablecoin,
-                userTokenAccount: await spl.getAssociatedTokenAddress(stablecoin, user.publicKey),
+                userTokenAccount: await spl.getAssociatedTokenAddress(
+                    stablecoin,
+                    user.publicKey,
+                    false,
+                    tokenProgramId
+                ),
                 tokenProgram: tokenProgramId,
             })
             .signers([user])
@@ -257,17 +270,26 @@ const programMethods = {
     },
     async withdraw(
         user: anchor.web3.Keypair,
-        stablecoin: anchor.web3.PublicKey,
         amount: anchor.BN,
-        tokenProgramId: anchor.web3.PublicKey,
         program: anchor.Program<BearishDotFun>
     ) {
+        const provider = program.provider;
+        const stablecoin = (
+            await program.account.platformConfig.fetch(pda.getPlatformConfig(program))
+        ).stablecoin;
+        const tokenProgramId = (await provider.connection.getAccountInfo(stablecoin)).owner;
+
         const txSignature = await program.methods
             .withdraw(amount)
             .accounts({
                 user: user.publicKey,
                 stablecoin,
-                userTokenAccount: await spl.getAssociatedTokenAddress(stablecoin, user.publicKey),
+                userTokenAccount: await spl.getAssociatedTokenAddress(
+                    stablecoin,
+                    user.publicKey,
+                    false,
+                    tokenProgramId
+                ),
                 tokenProgram: tokenProgramId,
             })
             .signers([user])
@@ -275,21 +297,18 @@ const programMethods = {
 
         return txSignature;
     },
-    async startRound(
-        user: anchor.web3.Keypair,
-        index: number,
-        program: anchor.Program<BearishDotFun>
-    ) {
+    async startRound(user: anchor.web3.Keypair, program: anchor.Program<BearishDotFun>) {
         const platformConfigAccount = await program.account.platformConfig.fetch(
             pda.getPlatformConfig(program)
         );
+        const roundIndex = platformConfigAccount.globalRoundInfo.round.toNumber() + 1;
         const priceAccount = platformConfigAccount.globalRoundInfo.priceAccount;
 
         const txSignature = await program.methods
             .startRound()
             .accounts({
                 user: user.publicKey,
-                round: pda.getRound(index, program),
+                round: pda.getRound(roundIndex, program),
                 priceAccount: priceAccount,
             })
             .signers([user])
@@ -297,21 +316,18 @@ const programMethods = {
 
         return txSignature;
     },
-    async endRound(
-        user: anchor.web3.Keypair,
-        index: number,
-        program: anchor.Program<BearishDotFun>
-    ) {
+    async endRound(user: anchor.web3.Keypair, program: anchor.Program<BearishDotFun>) {
         const platformConfigAccount = await program.account.platformConfig.fetch(
             pda.getPlatformConfig(program)
         );
+        const roundIndex = platformConfigAccount.globalRoundInfo.round.toNumber() + 1;
         const priceAccount = platformConfigAccount.globalRoundInfo.priceAccount;
 
         const txSignature = await program.methods
             .endRound()
             .accounts({
                 user: user.publicKey,
-                round: pda.getRound(index, program),
+                round: pda.getRound(roundIndex, program),
                 priceAccount: priceAccount,
             })
             .signers([user])
@@ -323,15 +339,36 @@ const programMethods = {
         user: anchor.web3.Keypair,
         amount: anchor.BN,
         isLong: boolean,
-        index: number,
         program: anchor.Program<BearishDotFun>
     ) {
+        const roundIndex =
+            (
+                await program.account.platformConfig.fetch(pda.getPlatformConfig(program))
+            ).globalRoundInfo.round.toNumber() + 1;
+
         const txSignature = await program.methods
             .placeBet(amount, isLong)
             .accounts({
                 user: user.publicKey,
-                round: pda.getRound(index, program),
-                userBet: pda.getUserBet(user.publicKey, index, program),
+                round: pda.getRound(roundIndex, program),
+                userBet: pda.getUserBet(user.publicKey, roundIndex, program),
+            })
+            .signers([user])
+            .rpc();
+
+        return txSignature;
+    },
+    async claimUserWinnings(
+        user: anchor.web3.Keypair,
+        roundIndex: number,
+        program: anchor.Program<BearishDotFun>
+    ) {
+        const txSignature = await program.methods
+            .claimUserWinnings(new anchor.BN(roundIndex))
+            .accounts({
+                user: user.publicKey,
+                round: pda.getRound(roundIndex + 1, program),
+                userBet: pda.getUserBet(user.publicKey, roundIndex + 1, program),
             })
             .signers([user])
             .rpc();
@@ -340,4 +377,4 @@ const programMethods = {
     },
 };
 
-export { sleep, createSplTokenMint, transfer, getStablecoin, pda, programMethods };
+export { sleep, transferSOL, createSplTokenMint, getStablecoin, pda, programMethods };

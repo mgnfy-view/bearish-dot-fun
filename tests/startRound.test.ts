@@ -17,7 +17,7 @@ describe("bearish-dot-fun", () => {
         user1: anchor.web3.Keypair,
         stablecoin: anchor.web3.PublicKey,
         bearishDotFun: anchor.Program<BearishDotFun>;
-    const roundIndex = 1;
+    let currentRoundIndex: number;
 
     before(async () => {
         ({ owner, user1, stablecoin, bearishDotFun } = await setup());
@@ -25,22 +25,31 @@ describe("bearish-dot-fun", () => {
         await programMethods.initialize(
             owner,
             stablecoin,
-            sampleGlobalRoundInfo,
             spl.TOKEN_PROGRAM_ID,
+            sampleGlobalRoundInfo,
             bearishDotFun
         );
     });
 
     it("Allows anyone to start a round", async () => {
-        await programMethods.startRound(user1, roundIndex, bearishDotFun);
+        await programMethods.startRound(user1, bearishDotFun);
+        currentRoundIndex =
+            (
+                await bearishDotFun.account.platformConfig.fetch(
+                    pda.getPlatformConfig(bearishDotFun)
+                )
+            ).globalRoundInfo.round.toNumber() + 1;
 
         const platformConfigAccount = await bearishDotFun.account.platformConfig.fetch(
             pda.getPlatformConfig(bearishDotFun)
         );
-        assert.strictEqual(platformConfigAccount.globalRoundInfo.round.toNumber(), roundIndex - 1);
+        assert.strictEqual(
+            platformConfigAccount.globalRoundInfo.round.toNumber(),
+            currentRoundIndex - 1
+        );
 
         const roundAccount = await bearishDotFun.account.round.fetch(
-            pda.getRound(roundIndex, bearishDotFun)
+            pda.getRound(currentRoundIndex, bearishDotFun)
         );
         assert.isAbove(roundAccount.startTime.toNumber(), 0);
         assert.isAbove(roundAccount.startingPrice.toNumber(), 0);
@@ -58,7 +67,7 @@ describe("bearish-dot-fun", () => {
 
     it("Doesn't allow anyone to start the same round twice", async () => {
         try {
-            await programMethods.startRound(user1, roundIndex, bearishDotFun);
+            await programMethods.startRound(user1, bearishDotFun);
         } catch (error) {
             assert.strictEqual(
                 (error as anchor.AnchorError).error.errorMessage,
@@ -68,23 +77,22 @@ describe("bearish-dot-fun", () => {
     });
 
     it("Allows anyone to start the next round once the current round ends", async () => {
-        const nextRoundIndex = 2;
-
         await sleep(sampleGlobalRoundInfo.duration.toNumber() * millisecondsPerSecond);
-        await programMethods.endRound(user1, roundIndex, bearishDotFun);
+        await programMethods.endRound(user1, bearishDotFun);
 
-        await programMethods.startRound(user1, nextRoundIndex, bearishDotFun);
+        await programMethods.startRound(user1, bearishDotFun);
+        currentRoundIndex++;
 
         const platformConfigAccount = await bearishDotFun.account.platformConfig.fetch(
             pda.getPlatformConfig(bearishDotFun)
         );
         assert.strictEqual(
             platformConfigAccount.globalRoundInfo.round.toNumber(),
-            nextRoundIndex - 1
+            currentRoundIndex - 1
         );
 
         const roundAccount = await bearishDotFun.account.round.fetch(
-            pda.getRound(nextRoundIndex, bearishDotFun)
+            pda.getRound(currentRoundIndex, bearishDotFun)
         );
         assert.isAbove(roundAccount.startTime.toNumber(), 0);
         assert.isAbove(roundAccount.startingPrice.toNumber(), 0);
@@ -95,7 +103,7 @@ describe("bearish-dot-fun", () => {
         assert.strictEqual(roundAccount.affiliatesForShortPositions.toNumber(), 0);
         assert.strictEqual(roundAccount.totalBetAmountLong.toNumber(), 0);
         assert.strictEqual(roundAccount.totalBetAmountShort.toNumber(), 0);
-        assert(
+        assert.isTrue(
             roundAccount.bump >= bumpRangeInclusive[0] && roundAccount.bump <= bumpRangeInclusive[1]
         );
     });
