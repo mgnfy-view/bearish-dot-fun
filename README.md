@@ -95,7 +95,7 @@ That's it, you are good to go now!
 ## Roadmap
 
 -   [x] Solana program development
--   [ ] Unit tests
+-   [x] Unit tests
 -   [x] Write a good README.md
 
 See the [open issues](https://github.com/mgnfy-view/bearish-dot-fun/issues) for a full list of proposed features (and known issues).

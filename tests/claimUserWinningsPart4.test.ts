@@ -86,4 +86,219 @@ describe("bearish-dot-fun", () => {
             expectedJackpotWinnings
         );
     });
+
+    it("Allows a user to claim jackpot with streak 6", async () => {
+        const userData: User[] = [
+            {
+                keypair: user1,
+                amount: new anchor.BN(amount),
+                isLong: true,
+                claimWinnings: false,
+            },
+            {
+                keypair: user2,
+                amount: new anchor.BN(amount),
+                isLong: false,
+                claimWinnings: false,
+            },
+        ];
+
+        const currentRoundIndex = await runRound(owner, userData, true, bearishDotFun);
+
+        const jackpotPoolAmount = (
+            await bearishDotFun.account.platformConfig.fetch(pda.getPlatformConfig(bearishDotFun))
+        ).globalRoundInfo.jackpotPoolAmount.toNumber();
+        const userBalanceBefore = (
+            await bearishDotFun.account.userInfo.fetch(
+                pda.getUserInfo(user1.publicKey, bearishDotFun)
+            )
+        ).amount.toNumber();
+
+        await programMethods.claimUserWinnings(user1, currentRoundIndex - 1, bearishDotFun);
+
+        const winnersShare = (amount * sampleGlobalRoundInfo.allocation.winnersShare) / bps;
+        const userBalanceAfter = (
+            await bearishDotFun.account.userInfo.fetch(
+                pda.getUserInfo(user1.publicKey, bearishDotFun)
+            )
+        ).amount.toNumber();
+        const expectedJackpotWinnings =
+            (jackpotPoolAmount * sampleGlobalRoundInfo.jackpotAllocation.streak6) / bps;
+        assert.strictEqual(
+            userBalanceAfter - userBalanceBefore - amount - winnersShare,
+            expectedJackpotWinnings
+        );
+    });
+
+    it("Allows a user to claim jackpot with streak 7", async () => {
+        const userData: User[] = [
+            {
+                keypair: user1,
+                amount: new anchor.BN(amount),
+                isLong: true,
+                claimWinnings: false,
+            },
+            {
+                keypair: user2,
+                amount: new anchor.BN(amount),
+                isLong: false,
+                claimWinnings: false,
+            },
+        ];
+
+        const currentRoundIndex = await runRound(owner, userData, true, bearishDotFun);
+
+        const jackpotPoolAmount = (
+            await bearishDotFun.account.platformConfig.fetch(pda.getPlatformConfig(bearishDotFun))
+        ).globalRoundInfo.jackpotPoolAmount.toNumber();
+        const userBalanceBefore = (
+            await bearishDotFun.account.userInfo.fetch(
+                pda.getUserInfo(user1.publicKey, bearishDotFun)
+            )
+        ).amount.toNumber();
+
+        await programMethods.claimUserWinnings(user1, currentRoundIndex - 1, bearishDotFun);
+
+        const winnersShare = (amount * sampleGlobalRoundInfo.allocation.winnersShare) / bps;
+        const userBalanceAfter = (
+            await bearishDotFun.account.userInfo.fetch(
+                pda.getUserInfo(user1.publicKey, bearishDotFun)
+            )
+        ).amount.toNumber();
+        const expectedJackpotWinnings =
+            (jackpotPoolAmount * sampleGlobalRoundInfo.jackpotAllocation.streak7) / bps;
+        assert.strictEqual(
+            userBalanceAfter - userBalanceBefore - amount - winnersShare,
+            expectedJackpotWinnings
+        );
+    });
+
+    it("Allows a user to claim jackpot with streak 8", async () => {
+        const userData: User[] = [
+            {
+                keypair: user1,
+                amount: new anchor.BN(amount),
+                isLong: true,
+                claimWinnings: false,
+            },
+            {
+                keypair: user2,
+                amount: new anchor.BN(amount),
+                isLong: false,
+                claimWinnings: false,
+            },
+        ];
+
+        const currentRoundIndex = await runRound(owner, userData, true, bearishDotFun);
+
+        const jackpotPoolAmount = (
+            await bearishDotFun.account.platformConfig.fetch(pda.getPlatformConfig(bearishDotFun))
+        ).globalRoundInfo.jackpotPoolAmount.toNumber();
+        const userBalanceBefore = (
+            await bearishDotFun.account.userInfo.fetch(
+                pda.getUserInfo(user1.publicKey, bearishDotFun)
+            )
+        ).amount.toNumber();
+
+        await programMethods.claimUserWinnings(user1, currentRoundIndex - 1, bearishDotFun);
+
+        const winnersShare = (amount * sampleGlobalRoundInfo.allocation.winnersShare) / bps;
+        const userBalanceAfter = (
+            await bearishDotFun.account.userInfo.fetch(
+                pda.getUserInfo(user1.publicKey, bearishDotFun)
+            )
+        ).amount.toNumber();
+        const expectedJackpotWinnings =
+            (jackpotPoolAmount * sampleGlobalRoundInfo.jackpotAllocation.streak8) / bps;
+        assert.strictEqual(
+            userBalanceAfter - userBalanceBefore - amount - winnersShare,
+            expectedJackpotWinnings
+        );
+    });
+
+    it("Allows a user to claim jackpot with streak 9", async () => {
+        const userData: User[] = [
+            {
+                keypair: user1,
+                amount: new anchor.BN(amount),
+                isLong: true,
+                claimWinnings: false,
+            },
+            {
+                keypair: user2,
+                amount: new anchor.BN(amount),
+                isLong: false,
+                claimWinnings: false,
+            },
+        ];
+
+        const currentRoundIndex = await runRound(owner, userData, true, bearishDotFun);
+
+        const jackpotPoolAmount = (
+            await bearishDotFun.account.platformConfig.fetch(pda.getPlatformConfig(bearishDotFun))
+        ).globalRoundInfo.jackpotPoolAmount.toNumber();
+        const userBalanceBefore = (
+            await bearishDotFun.account.userInfo.fetch(
+                pda.getUserInfo(user1.publicKey, bearishDotFun)
+            )
+        ).amount.toNumber();
+
+        await programMethods.claimUserWinnings(user1, currentRoundIndex - 1, bearishDotFun);
+
+        const winnersShare = (amount * sampleGlobalRoundInfo.allocation.winnersShare) / bps;
+        const userBalanceAfter = (
+            await bearishDotFun.account.userInfo.fetch(
+                pda.getUserInfo(user1.publicKey, bearishDotFun)
+            )
+        ).amount.toNumber();
+        const expectedJackpotWinnings =
+            (jackpotPoolAmount * sampleGlobalRoundInfo.jackpotAllocation.streak9) / bps;
+        assert.strictEqual(
+            userBalanceAfter - userBalanceBefore - amount - winnersShare,
+            expectedJackpotWinnings
+        );
+    });
+
+    it("Allows a user to claim jackpot with streak 10", async () => {
+        const userData: User[] = [
+            {
+                keypair: user1,
+                amount: new anchor.BN(amount),
+                isLong: true,
+                claimWinnings: false,
+            },
+            {
+                keypair: user2,
+                amount: new anchor.BN(amount),
+                isLong: false,
+                claimWinnings: false,
+            },
+        ];
+
+        const currentRoundIndex = await runRound(owner, userData, true, bearishDotFun);
+
+        const jackpotPoolAmount = (
+            await bearishDotFun.account.platformConfig.fetch(pda.getPlatformConfig(bearishDotFun))
+        ).globalRoundInfo.jackpotPoolAmount.toNumber();
+        const userBalanceBefore = (
+            await bearishDotFun.account.userInfo.fetch(
+                pda.getUserInfo(user1.publicKey, bearishDotFun)
+            )
+        ).amount.toNumber();
+
+        await programMethods.claimUserWinnings(user1, currentRoundIndex - 1, bearishDotFun);
+
+        const winnersShare = (amount * sampleGlobalRoundInfo.allocation.winnersShare) / bps;
+        const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
+            pda.getUserInfo(user1.publicKey, bearishDotFun)
+        );
+        const userBalanceAfter = userInfoAccount.amount.toNumber();
+        const expectedJackpotWinnings =
+            (jackpotPoolAmount * sampleGlobalRoundInfo.jackpotAllocation.streak10) / bps;
+        assert.strictEqual(
+            userBalanceAfter - userBalanceBefore - amount - winnersShare,
+            expectedJackpotWinnings
+        );
+        assert.strictEqual(userInfoAccount.timesWon.toNumber(), 0);
+    });
 });
