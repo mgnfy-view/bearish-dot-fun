@@ -3,9 +3,9 @@ import * as anchor from "@coral-xyz/anchor";
 import { GlobalRoundInfo } from "./types";
 
 const decimals = 9;
+const bps = 10000;
 const bumpRangeInclusive = [1, 255];
 const millisecondsPerSecond = 1000;
-const bps = 10000;
 
 const priceAccounts = {
     solUsd: new anchor.web3.PublicKey("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"),
@@ -43,7 +43,7 @@ const errors = {
 
 const sampleGlobalRoundInfo: GlobalRoundInfo = {
     round: new anchor.BN(0),
-    duration: new anchor.BN(5),
+    duration: new anchor.BN(1),
     allocation: {
         winnersShare: 4500,
         affiliateShare: 500,
@@ -67,9 +67,9 @@ const sampleGlobalRoundInfo: GlobalRoundInfo = {
 
 export {
     decimals,
+    bps,
     bumpRangeInclusive,
     millisecondsPerSecond,
-    bps,
     priceAccounts,
     seeds,
     errors,

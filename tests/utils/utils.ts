@@ -3,8 +3,8 @@ import * as spl from "@solana/spl-token";
 import { Connection, sendAndConfirmTransaction, SystemProgram, Transaction } from "@solana/web3.js";
 import { BearishDotFun } from "../../target/types/bearish_dot_fun";
 
-import { Allocation, GlobalRoundInfo, JackPotAllocation } from "./types";
-import { seeds } from "./constants";
+import { Allocation, GlobalRoundInfo, JackPotAllocation, User } from "./types";
+import { millisecondsPerSecond, priceAccounts, sampleGlobalRoundInfo, seeds } from "./constants";
 
 function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -55,6 +55,41 @@ async function getStablecoin(
         owner,
         amount
     );
+}
+
+async function runRound(
+    owner: anchor.web3.Keypair,
+    users: User[],
+    makeLongsWin: boolean,
+    program: anchor.Program<BearishDotFun>
+) {
+    makeLongsWin
+        ? await programMethods.setPriceAccount(owner, priceAccounts.solUsd, program)
+        : await programMethods.setPriceAccount(owner, priceAccounts.btcUsd, program);
+
+    await programMethods.startRound(owner, program);
+    const currentRoundIndex =
+        (
+            await program.account.platformConfig.fetch(pda.getPlatformConfig(program))
+        ).globalRoundInfo.round.toNumber() + 1;
+
+    for (const user of users) {
+        await programMethods.placeBet(user.keypair, user.amount, user.isLong, program);
+    }
+
+    makeLongsWin
+        ? await programMethods.setPriceAccount(owner, priceAccounts.btcUsd, program)
+        : await programMethods.setPriceAccount(owner, priceAccounts.solUsd, program);
+
+    await sleep(sampleGlobalRoundInfo.duration.toNumber() * millisecondsPerSecond);
+    await programMethods.endRound(owner, program);
+
+    for (const user of users) {
+        if (user.claimWinnings)
+            await programMethods.claimUserWinnings(user.keypair, currentRoundIndex - 1, program);
+    }
+
+    return currentRoundIndex;
 }
 
 const pda = {
@@ -218,6 +253,33 @@ const programMethods = {
             .setStalenessThreshold(stalenessThreshold)
             .accounts({
                 owner: owner.publicKey,
+            })
+            .signers([owner])
+            .rpc();
+
+        return txSignature;
+    },
+    async withdrawPlatformFees(owner: anchor.web3.Keypair, program: anchor.Program<BearishDotFun>) {
+        const provider = program.provider;
+        const stablecoin = (
+            await program.account.platformConfig.fetch(pda.getPlatformConfig(program))
+        ).stablecoin;
+        const tokenProgramId = (await provider.connection.getAccountInfo(stablecoin)).owner;
+
+        const txSignature = await program.methods
+            .withdrawPlatformFees()
+            .accounts({
+                owner: owner.publicKey,
+                stablecoin,
+                ownerTokenAccount: (
+                    await spl.getOrCreateAssociatedTokenAccount(
+                        provider.connection,
+                        owner,
+                        stablecoin,
+                        owner.publicKey
+                    )
+                ).address,
+                tokenProgram: tokenProgramId,
             })
             .signers([owner])
             .rpc();
@@ -412,4 +474,4 @@ const programMethods = {
     },
 };
 
-export { sleep, transferSOL, createSplTokenMint, getStablecoin, pda, programMethods };
+export { sleep, transferSOL, createSplTokenMint, getStablecoin, runRound, pda, programMethods };

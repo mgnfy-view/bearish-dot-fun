@@ -13,6 +13,9 @@ sleep 1s
 anchor test tests/setPlatformConfig.test.ts --skip-build
 sleep 1s
 
+anchor test tests/withdrawPlatformFees.test.ts --skip-build
+sleep 1s
+
 anchor test tests/setAffiliate.test.ts --skip-build
 sleep 1s
 
@@ -40,13 +43,16 @@ sleep 1s
 anchor test tests/endRoundPart4.test.ts --skip-build
 sleep 1s
 
-anchor test tests/claimUserWinnings1.test.ts --skip-build
+anchor test tests/claimUserWinningsPart1.test.ts --skip-build
 sleep 1s
 
-anchor test tests/claimUserWinnings2.test.ts --skip-build
+anchor test tests/claimUserWinningsPart2.test.ts --skip-build
 sleep 1s
 
-anchor test tests/claimUserWinnings3.test.ts --skip-build
+anchor test tests/claimUserWinningsPart3.test.ts --skip-build
+sleep 1s
+
+anchor test tests/claimUserWinningsPart4.test.ts --skip-build
 sleep 1s
 
 anchor test tests/claimAffiliateWinnings.test.ts --skip-build

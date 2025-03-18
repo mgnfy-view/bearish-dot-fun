@@ -28,4 +28,11 @@ interface GlobalRoundInfo {
     accumulatedPlatformFees: anchor.BN;
 }
 
-export { Allocation, JackPotAllocation, GlobalRoundInfo };
+interface User {
+    keypair: anchor.web3.Keypair;
+    amount: anchor.BN;
+    isLong: boolean;
+    claimWinnings: boolean;
+}
+
+export { Allocation, JackPotAllocation, GlobalRoundInfo, User };

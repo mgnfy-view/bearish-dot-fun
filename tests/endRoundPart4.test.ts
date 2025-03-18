@@ -5,13 +5,7 @@ import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
 import { pda, programMethods, sleep } from "./utils/utils";
 import { setup } from "./utils/setup";
-import {
-    sampleGlobalRoundInfo,
-    millisecondsPerSecond,
-    priceAccounts,
-    decimals,
-    bps,
-} from "./utils/constants";
+import { sampleGlobalRoundInfo, millisecondsPerSecond, decimals, bps } from "./utils/constants";
 
 describe("bearish-dot-fun", () => {
     let owner: anchor.web3.Keypair,

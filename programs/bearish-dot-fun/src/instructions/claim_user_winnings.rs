@@ -115,7 +115,7 @@ impl ClaimUserWinnings<'_> {
             _ => 0,
         };
         if streak_winnings_share > 0
-            && round_index == user_info.last_won_round + 1
+            && round_index == user_info.last_won_round
             && global_round_info.jackpot_pool_amount > 0
         {
             let jackpot_amount = u64::try_from(utils::math::mul_div_down(
@@ -132,11 +132,12 @@ impl ClaimUserWinnings<'_> {
                 user_info.times_won = 0;
             }
         }
-        if round_index != user_info.last_won_round + 1 {
+
+        user_info.amount += user_bet.amount + amount;
+        if round_index != user_info.last_won_round {
             user_info.times_won = 1;
         }
-        user_info.last_won_round = round_index;
-        user_info.amount += user_bet.amount + amount;
+        user_info.last_won_round = round_index + 1;
 
         emit!(events::WinningsClaimed {
             user: ctx.accounts.user.key(),

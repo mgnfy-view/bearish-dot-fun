@@ -3,15 +3,10 @@ import * as spl from "@solana/spl-token";
 import { assert } from "chai";
 import { BearishDotFun } from "../target/types/bearish_dot_fun";
 
-import { pda, programMethods, sleep } from "./utils/utils";
+import { User } from "./utils/types";
+import { pda, programMethods, runRound } from "./utils/utils";
 import { setup } from "./utils/setup";
-import {
-    sampleGlobalRoundInfo,
-    millisecondsPerSecond,
-    priceAccounts,
-    decimals,
-    bps,
-} from "./utils/constants";
+import { sampleGlobalRoundInfo, decimals, bps } from "./utils/constants";
 
 describe("bearish-dot-fun", () => {
     let owner: anchor.web3.Keypair,
@@ -19,8 +14,8 @@ describe("bearish-dot-fun", () => {
         user2: anchor.web3.Keypair,
         stablecoin: anchor.web3.PublicKey,
         bearishDotFun: anchor.Program<BearishDotFun>;
-    let currentRoundIndex: number;
     const amount = 100 * 10 ** decimals;
+    const depositAmount = amount * 3;
 
     before(async () => {
         ({ owner, user1, user2, stablecoin, bearishDotFun } = await setup());
@@ -33,28 +28,27 @@ describe("bearish-dot-fun", () => {
             bearishDotFun
         );
 
-        await programMethods.deposit(user1, new anchor.BN(amount * 3), bearishDotFun);
-        await programMethods.deposit(user2, new anchor.BN(amount * 3), bearishDotFun);
-
-        await programMethods.startRound(user1, bearishDotFun);
-        currentRoundIndex =
-            (
-                await bearishDotFun.account.platformConfig.fetch(
-                    pda.getPlatformConfig(bearishDotFun)
-                )
-            ).globalRoundInfo.round.toNumber() + 1;
+        await programMethods.deposit(user1, new anchor.BN(depositAmount), bearishDotFun);
+        await programMethods.deposit(user2, new anchor.BN(depositAmount), bearishDotFun);
     });
 
     it("Allows ending a round with longs winning", async () => {
-        await programMethods.placeBet(user1, new anchor.BN(amount), true, bearishDotFun);
-        await programMethods.placeBet(user2, new anchor.BN(amount), false, bearishDotFun);
+        const userData: User[] = [
+            {
+                keypair: user1,
+                amount: new anchor.BN(amount),
+                isLong: true,
+                claimWinnings: false,
+            },
+            {
+                keypair: user2,
+                amount: new anchor.BN(amount),
+                isLong: false,
+                claimWinnings: false,
+            },
+        ];
 
-        // Changing the price account to BTC/USD price account so that longs can win
-        // since the price of SOL is way below BTC
-        await programMethods.setPriceAccount(owner, priceAccounts.btcUsd, bearishDotFun);
-        await sleep(sampleGlobalRoundInfo.duration.toNumber() * millisecondsPerSecond);
-
-        await programMethods.endRound(user1, bearishDotFun);
+        const currentRoundIndex = await runRound(owner, userData, true, bearishDotFun);
 
         const roundAccount = await bearishDotFun.account.round.fetch(
             pda.getRound(currentRoundIndex, bearishDotFun)
@@ -85,15 +79,6 @@ describe("bearish-dot-fun", () => {
     });
 
     it("Allows ending a round with longs winning and 0 longs", async () => {
-        await programMethods.setPriceAccount(owner, priceAccounts.solUsd, bearishDotFun);
-        await programMethods.startRound(user1, bearishDotFun);
-        currentRoundIndex++;
-
-        await programMethods.placeBet(user1, new anchor.BN(amount), false, bearishDotFun);
-
-        await programMethods.setPriceAccount(owner, priceAccounts.btcUsd, bearishDotFun);
-        await sleep(sampleGlobalRoundInfo.duration.toNumber() * millisecondsPerSecond);
-
         let platformConfigAccount = await bearishDotFun.account.platformConfig.fetch(
             pda.getPlatformConfig(bearishDotFun)
         );
@@ -102,7 +87,16 @@ describe("bearish-dot-fun", () => {
         const jackpotPoolAmountBefore =
             platformConfigAccount.globalRoundInfo.jackpotPoolAmount.toNumber();
 
-        await programMethods.endRound(user1, bearishDotFun);
+        const userData: User[] = [
+            {
+                keypair: user1,
+                amount: new anchor.BN(amount),
+                isLong: false,
+                claimWinnings: false,
+            },
+        ];
+
+        const currentRoundIndex = await runRound(owner, userData, true, bearishDotFun);
 
         const roundAccount = await bearishDotFun.account.round.fetch(
             pda.getRound(currentRoundIndex, bearishDotFun)
@@ -139,15 +133,6 @@ describe("bearish-dot-fun", () => {
     });
 
     it("Allows ending a round with longs winning and all bets on long", async () => {
-        await programMethods.setPriceAccount(owner, priceAccounts.solUsd, bearishDotFun);
-        await programMethods.startRound(user1, bearishDotFun);
-        currentRoundIndex++;
-
-        await programMethods.placeBet(user1, new anchor.BN(amount), true, bearishDotFun);
-
-        await programMethods.setPriceAccount(owner, priceAccounts.btcUsd, bearishDotFun);
-        await sleep(sampleGlobalRoundInfo.duration.toNumber() * millisecondsPerSecond);
-
         let platformConfigAccount = await bearishDotFun.account.platformConfig.fetch(
             pda.getPlatformConfig(bearishDotFun)
         );
@@ -156,7 +141,16 @@ describe("bearish-dot-fun", () => {
         const jackpotPoolAmountBefore =
             platformConfigAccount.globalRoundInfo.jackpotPoolAmount.toNumber();
 
-        await programMethods.endRound(user1, bearishDotFun);
+        const userData: User[] = [
+            {
+                keypair: user1,
+                amount: new anchor.BN(amount),
+                isLong: true,
+                claimWinnings: false,
+            },
+        ];
+
+        const currentRoundIndex = await runRound(owner, userData, true, bearishDotFun);
 
         const roundAccount = await bearishDotFun.account.round.fetch(
             pda.getRound(currentRoundIndex, bearishDotFun)

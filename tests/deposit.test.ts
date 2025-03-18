@@ -13,6 +13,7 @@ describe("bearish-dot-fun", () => {
         user1: anchor.web3.Keypair,
         stablecoin: anchor.web3.PublicKey,
         bearishDotFun: anchor.Program<BearishDotFun>;
+    let user1AssociatedTokenAccountAddress: anchor.web3.PublicKey;
     const amount = 100 * 10 ** decimals;
 
     before(async () => {
@@ -25,14 +26,14 @@ describe("bearish-dot-fun", () => {
             sampleGlobalRoundInfo,
             bearishDotFun
         );
-    });
 
-    it("Allows a user to deposit tokens", async () => {
-        const user1AssociatedTokenAccountAddress = await spl.getAssociatedTokenAddress(
+        user1AssociatedTokenAccountAddress = await spl.getAssociatedTokenAddress(
             stablecoin,
             user1.publicKey
         );
+    });
 
+    it("Allows a user to deposit tokens", async () => {
         const user1BalanceBefore = (
             await spl.getAccount(provider.connection, user1AssociatedTokenAccountAddress)
         ).amount;
@@ -63,11 +64,6 @@ describe("bearish-dot-fun", () => {
     });
 
     it("Allows a user to deposit tokens multiple times", async () => {
-        const user1AssociatedTokenAccountAddress = await spl.getAssociatedTokenAddress(
-            stablecoin,
-            user1.publicKey
-        );
-
         const user1BalanceBefore = (
             await spl.getAccount(provider.connection, user1AssociatedTokenAccountAddress)
         ).amount;

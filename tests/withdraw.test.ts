@@ -14,7 +14,8 @@ describe("bearish-dot-fun", () => {
         stablecoin: anchor.web3.PublicKey,
         bearishDotFun: anchor.Program<BearishDotFun>;
     let user1AssociatedTokenAccountAddress: anchor.web3.PublicKey;
-    const amount = 100 * 10 ** decimals;
+    const withdrawAmount = 100 * 10 ** decimals;
+    const depositAmount = withdrawAmount * 2;
 
     before(async () => {
         ({ provider, owner, user1, stablecoin, bearishDotFun } = await setup());
@@ -27,7 +28,7 @@ describe("bearish-dot-fun", () => {
             bearishDotFun
         );
 
-        await programMethods.deposit(user1, new anchor.BN(amount * 2), bearishDotFun);
+        await programMethods.deposit(user1, new anchor.BN(depositAmount), bearishDotFun);
 
         user1AssociatedTokenAccountAddress = await spl.getAssociatedTokenAddress(
             stablecoin,
@@ -36,8 +37,6 @@ describe("bearish-dot-fun", () => {
     });
 
     it("Allows a user to withdraw deposited tokens", async () => {
-        const withdrawAmount = amount;
-
         const user1BalanceBefore = (
             await spl.getAccount(provider.connection, user1AssociatedTokenAccountAddress)
         ).amount;
@@ -52,17 +51,15 @@ describe("bearish-dot-fun", () => {
         const platformVaultBalanceAfter = (
             await spl.getAccount(provider.connection, pda.getPlatformVault(bearishDotFun))
         ).amount;
-        assert.strictEqual(Number(platformVaultBalanceAfter), amount * 2 - withdrawAmount);
+        assert.strictEqual(Number(platformVaultBalanceAfter), depositAmount - withdrawAmount);
 
         const userInfoAccount = await bearishDotFun.account.userInfo.fetch(
             pda.getUserInfo(user1.publicKey, bearishDotFun)
         );
-        assert.strictEqual(userInfoAccount.amount.toNumber(), amount * 2 - withdrawAmount);
+        assert.strictEqual(userInfoAccount.amount.toNumber(), depositAmount - withdrawAmount);
     });
 
     it("Allows a user to withdraw deposited tokens multiple times as long as they have sufficient balance", async () => {
-        const withdrawAmount = amount;
-
         const user1BalanceBefore = (
             await spl.getAccount(provider.connection, user1AssociatedTokenAccountAddress)
         ).amount;
@@ -97,8 +94,6 @@ describe("bearish-dot-fun", () => {
     });
 
     it("Does not allow a user to withdraw more than deposited tokens", async () => {
-        const withdrawAmount = amount * 2;
-
         try {
             await programMethods.withdraw(user1, new anchor.BN(withdrawAmount), bearishDotFun);
         } catch {}

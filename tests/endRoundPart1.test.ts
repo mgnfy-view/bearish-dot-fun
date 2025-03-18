@@ -40,10 +40,11 @@ describe("bearish-dot-fun", () => {
 
     it("Allows ending a round with no bets placed", async () => {
         await sleep(sampleGlobalRoundInfo.duration.toNumber() * millisecondsPerSecond);
-
         await programMethods.endRound(user1, bearishDotFun);
 
-        const roundIndex = 1;
+        const roundIndex = (
+            await bearishDotFun.account.platformConfig.fetch(pda.getPlatformConfig(bearishDotFun))
+        ).globalRoundInfo.round.toNumber();
         const roundAccount = await bearishDotFun.account.round.fetch(
             pda.getRound(roundIndex, bearishDotFun)
         );

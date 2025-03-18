@@ -34,9 +34,9 @@ describe("bearish-dot-fun", () => {
         );
 
         await programMethods.deposit(user1, new anchor.BN(amount), bearishDotFun);
-        await programMethods.deposit(user2, new anchor.BN(amount), bearishDotFun);
 
         await programMethods.setAffiliate(user2, owner.publicKey, bearishDotFun);
+        await programMethods.deposit(user2, new anchor.BN(amount), bearishDotFun);
 
         await programMethods.startRound(user1, bearishDotFun);
         currentRoundIndex =
@@ -58,7 +58,7 @@ describe("bearish-dot-fun", () => {
         assert.deepEqual(userBetAccount.affiliate, anchor.web3.PublicKey.default);
         assert.isFalse(userBetAccount.hasClaimedWinnings);
         assert.isFalse(userBetAccount.hasAffiliateClaimedWinnings);
-        assert(
+        assert.isTrue(
             userBetAccount.bump >= bumpRangeInclusive[0] &&
                 userBetAccount.bump <= bumpRangeInclusive[1]
         );
@@ -97,7 +97,7 @@ describe("bearish-dot-fun", () => {
         assert.deepEqual(userBetAccount.affiliate, owner.publicKey);
         assert.isFalse(userBetAccount.hasClaimedWinnings);
         assert.isFalse(userBetAccount.hasAffiliateClaimedWinnings);
-        assert(
+        assert.isTrue(
             userBetAccount.bump >= bumpRangeInclusive[0] &&
                 userBetAccount.bump <= bumpRangeInclusive[1]
         );
