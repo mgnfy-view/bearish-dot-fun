@@ -25,7 +25,7 @@ security_txt! {
     auditors: ""
 }
 
-declare_id!("8oPebxyRHN3oUiDRypZuVcS3FYfsGYJtmCEBG2NaKVUD");
+declare_id!("3QeFNCSAeShUHBZGWtBANjPSevFtN7XygkwngohM7meP");
 
 #[program]
 pub mod bearish_dot_fun {

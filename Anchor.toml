@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-bearish_dot_fun = "8oPebxyRHN3oUiDRypZuVcS3FYfsGYJtmCEBG2NaKVUD"
+bearish_dot_fun = "3QeFNCSAeShUHBZGWtBANjPSevFtN7XygkwngohM7meP"
 
 [registry]
 url = "https://api.apr.dev"
@@ -17,6 +17,16 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[test]
+startup_wait = 5000
+shutdown_wait = 2000
+upgradeable = false
+
+[test.validator]
+bind_address = "0.0.0.0"
+ledger = ".anchor/test-ledger"
+rpc_port = 8899
 
 [[test.validator.account]]
 address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"

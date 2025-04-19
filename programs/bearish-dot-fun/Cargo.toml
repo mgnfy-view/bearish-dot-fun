@@ -17,6 +17,7 @@ no-log-ix-name = []
 anchor-debug = []
 custom-heap = []
 solana = []
+custom-panic = []
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 
 
@@ -25,4 +26,3 @@ anchor-lang = { version = "0.31.0", features = ["init-if-needed"] }
 anchor-spl = "0.31.0"
 pyth-sdk-solana = "0.10.4"
 solana-security-txt = "1.1.1"
-
